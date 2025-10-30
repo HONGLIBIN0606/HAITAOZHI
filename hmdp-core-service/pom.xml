@@ -60,6 +60,11 @@
         </dependency>
         <dependency>
             <groupId>org.javaup</groupId>
+            <artifactId>hmdp-redis-framework</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javaup</groupId>
             <artifactId>hmdp-service-lock-framework</artifactId>
             <version>${revision}</version>
         </dependency>

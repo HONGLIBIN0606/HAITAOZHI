@@ -4,12 +4,19 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.javaup.core.RedisKeyManage;
 import org.javaup.dto.Result;
 import org.javaup.entity.Shop;
 import org.javaup.mapper.ShopMapper;
+import org.javaup.redis.RedisCache;
+import org.javaup.redis.RedisKeyBuild;
 import org.javaup.service.IShopService;
+import org.javaup.servicelock.LockType;
+import org.javaup.util.ServiceLockTool;
 import org.javaup.utils.CacheClient;
 import org.javaup.utils.SystemConstants;
+import org.redisson.api.RLock;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
@@ -24,10 +31,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.javaup.utils.RedisConstants.CACHE_SHOP_KEY;
 import static org.javaup.utils.RedisConstants.CACHE_SHOP_TTL;
+import static org.javaup.utils.RedisConstants.LOCK_SHOP_KEY;
 import static org.javaup.utils.RedisConstants.SHOP_GEO_KEY;
 
 /**
@@ -38,6 +47,7 @@ import static org.javaup.utils.RedisConstants.SHOP_GEO_KEY;
  * @author 虎哥
  * @since 2021-12-22
  */
+@Slf4j
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
 
@@ -47,18 +57,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Resource
     private CacheClient cacheClient;
+    
+    @Resource
+    private ServiceLockTool serviceLockTool;
+    
+    @Resource
+    private RedisCache redisCache;
 
     @Override
     public Result queryById(Long id) {
         // 解决缓存穿透
-        Shop shop = queryByIdV1(id);
+        Shop shop = queryByIdV4(id);
 
         // 互斥锁解决缓存击穿
-        shop = queryByIdV2(id);
+        //shop = queryByIdV2(id);
 
         // 逻辑过期解决缓存击穿
-        shop = queryByIdV3(id);
-
+        //shop = queryByIdV3(id);
+        
+        // 🚀完美的方案！使用双重检测锁解决缓存击穿
+        //shop = queryByIdV4(id);
+        
         if (shop == null) {
             return Result.fail("店铺不存在！");
         }
@@ -82,6 +101,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 逻辑过期解决缓存击穿
         return cacheClient
                 .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
+    }
+    
+    public Shop queryByIdV4(Long id){
+        // 双重检测解决缓存击穿
+        Shop shop =
+                redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY, id), Shop.class);
+        if (Objects.nonNull(shop)) {
+            return shop;
+        }
+        log.info("查询商铺 从Redis缓存没有查询到 商铺id : {}",id);
+        RLock lock = serviceLockTool.getLock(LockType.Reentrant, LOCK_SHOP_KEY, new String[]{String.valueOf(id)});
+        lock.lock();
+        try {
+            return redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY, id)
+                    ,Shop.class,
+                    () -> getById(id)
+                    ,CACHE_SHOP_TTL,
+                    TimeUnit.MINUTES);
+        }finally {
+            lock.unlock();
+        }
     }
 
     @Override

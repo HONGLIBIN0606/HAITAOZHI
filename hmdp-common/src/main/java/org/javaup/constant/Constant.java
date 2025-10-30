@@ -10,16 +10,4 @@ public class Constant {
     public static final String PREFIX_DISTINCTION_NAME = "prefix.distinction.name";
     
     public static final String DEFAULT_PREFIX_DISTINCTION_NAME = "hmdp";
-    
-    public static final String SPRING_INJECT_PREFIX_DISTINCTION_NAME = "${"+PREFIX_DISTINCTION_NAME+":"+DEFAULT_PREFIX_DISTINCTION_NAME+"}";
-
-    public static final String UNDER_LINE = "_";
-    
-    public static final String STRIKE = "-";
-    
-    public static final String COMMA = ",";
-    
-    public static final String DATE_DAY_PATTERN = "yyyyMMdd";
-    
-    public static final Integer TWO = 2;
 }
