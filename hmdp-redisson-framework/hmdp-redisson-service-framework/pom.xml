@@ -15,6 +15,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>hmdp-bloom-filter-framework</module>
         <module>hmdp-redisson-common-framework</module>
 		<module>hmdp-service-lock-framework</module>
         <module>hmdp-repeat-execute-limit-framework</module>

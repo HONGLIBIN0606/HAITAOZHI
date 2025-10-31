@@ -15,7 +15,7 @@ public enum RedisKeyManage {
      * */
     CACHE_SHOP_KEY("cache:shop:%s","商铺","value为Shop类型","k"),
     
-   
+    CACHE_SHOP_KEY_NULL("cache:shop_null:%s","商铺空的数据","value为这是空值","k"),
     ;
 
     /**

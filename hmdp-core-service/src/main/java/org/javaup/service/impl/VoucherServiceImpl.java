@@ -5,6 +5,7 @@ import jakarta.annotation.Resource;
 import org.javaup.dto.Result;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.Voucher;
+import org.javaup.handler.BloomFilterHandler;
 import org.javaup.mapper.VoucherMapper;
 import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IVoucherService;
@@ -31,6 +32,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     private ISeckillVoucherService seckillVoucherService;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private BloomFilterHandler bloomFilterHandler;
 
     @Override
     public Result queryVoucherOfShop(Long shopId) {
@@ -41,7 +44,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void addSeckillVoucher(Voucher voucher) {
         // 保存优惠券
         save(voucher);

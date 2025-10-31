@@ -26,3 +26,7 @@ logging:
     org.javaup: debug
   pattern:
     dateformat: mm:ss.SSS
+bloom-filter:
+  name: shop-register-bloom-filter
+  expectedInsertions: 1000
+  falseProbability: 0.01
