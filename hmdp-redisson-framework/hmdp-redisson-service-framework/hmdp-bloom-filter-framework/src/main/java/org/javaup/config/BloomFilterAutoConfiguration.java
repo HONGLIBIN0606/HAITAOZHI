@@ -1,6 +1,7 @@
 package org.javaup.config;
 
-import org.javaup.handler.BloomFilterHandler;
+import org.javaup.handler.BloomFilterHandlerFactory;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -13,11 +14,15 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(BloomFilterProperties.class)
 public class BloomFilterAutoConfiguration {
     
-    /**
-     * 布隆过滤器
-     */
     @Bean
-    public BloomFilterHandler rBloomFilterUtil(RedissonClient redissonClient, BloomFilterProperties bloomFilterProperties) {
-        return new BloomFilterHandler(redissonClient, bloomFilterProperties);
+    public BloomFilterHandlerFactory bloomFilterHandlerFactory(){
+        return new BloomFilterHandlerFactory();
+    }
+
+    @Bean
+    public BloomFilterHandlerRegistrar bloomFilterHandlerRegistrar(ConfigurableApplicationContext applicationContext,
+                                                                  RedissonClient redissonClient,
+                                                                  BloomFilterProperties bloomFilterProperties){
+        return new BloomFilterHandlerRegistrar(applicationContext, redissonClient, bloomFilterProperties);
     }
 }

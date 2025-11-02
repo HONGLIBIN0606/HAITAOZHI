@@ -5,7 +5,6 @@ import jakarta.annotation.Resource;
 import org.javaup.dto.Result;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.Voucher;
-import org.javaup.handler.BloomFilterHandler;
 import org.javaup.mapper.VoucherMapper;
 import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IVoucherService;
@@ -33,8 +32,6 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     private ISeckillVoucherService seckillVoucherService;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-    @Resource
-    private BloomFilterHandler bloomFilterHandler;
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
     

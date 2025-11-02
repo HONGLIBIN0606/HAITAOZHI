@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.dto.Result;
 import org.javaup.entity.Shop;
-import org.javaup.handler.BloomFilterHandler;
+import org.javaup.handler.BloomFilterHandlerFactory;
 import org.javaup.mapper.ShopMapper;
 import org.javaup.redis.RedisCache;
 import org.javaup.redis.RedisKeyBuild;
@@ -67,7 +67,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     private RedisCache redisCache;
     
     @Resource
-    private BloomFilterHandler bloomFilterHandler;
+    private BloomFilterHandlerFactory bloomFilterHandlerFactory;
     
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
@@ -78,8 +78,8 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         // 写入数据库
         shop.setId(snowflakeIdGenerator.nextId());
         save(shop);
-        // 写入布隆过滤器
-        bloomFilterHandler.add(String.valueOf(shop.getId()));
+        // 写入布隆过滤器（商铺业务）
+        bloomFilterHandlerFactory.get("shop").add(String.valueOf(shop.getId()));
         // 返回店铺id
         return Result.ok(shop.getId());
     }
@@ -132,7 +132,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         }
         log.info("查询商铺 从Redis缓存没有查询到 商铺id : {}",id);
         // 通过布隆过滤器判断是否存在
-        if (!bloomFilterHandler.contains(String.valueOf(id))) {
+        if (!bloomFilterHandlerFactory.get("shop").contains(String.valueOf(id))) {
             log.info("查询商铺 布隆过滤器判断不存在 商铺id : {}",id);
             throw new RuntimeException("查询商铺不存在");
         }

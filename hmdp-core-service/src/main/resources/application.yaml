@@ -47,6 +47,12 @@ logging:
   pattern:
     dateformat: mm:ss.SSS
 bloom-filter:
-  name: shop-register-bloom-filter
-  expectedInsertions: 1000
-  falseProbability: 0.01
+  filters:
+    shop:
+      name: shop-id-bloom
+      expected-insertions: 50000
+      false-probability: 0.01
+    coupon:
+      name: coupon-id-bloom
+      expected-insertions: 100000
+      false-probability: 0.01
