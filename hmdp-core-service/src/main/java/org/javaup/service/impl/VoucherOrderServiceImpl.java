@@ -11,6 +11,8 @@ import org.javaup.core.RedisKeyManage;
 import org.javaup.dto.Result;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.VoucherOrder;
+import org.javaup.enums.BaseCode;
+import org.javaup.exception.HmdpFrameException;
 import org.javaup.lua.SeckillVoucherOperate;
 import org.javaup.mapper.VoucherOrderMapper;
 import org.javaup.redis.RedisKeyBuild;
@@ -38,6 +40,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -231,16 +234,20 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 1.执行lua脚本
         List<String> keys = ListUtil.of(
                 RedisKeyBuild.getRedisKey(RedisKeyManage.SECKILL_STOCK_KEY),
-                RedisKeyBuild.getRedisKey(RedisKeyManage.SECKILL_VOUCHER_KEY)
+                RedisKeyBuild.getRedisKey(RedisKeyManage.SECKILL_VOUCHER_KEY),
+                RedisKeyBuild.getRedisKey(RedisKeyManage.SECKILL_ORDER_KEY)
         );
         String[] args = new String[3];
         args[0] = voucherId.toString();
         args[1] = userId.toString();
         args[2] = String.valueOf(orderId);
-        Long result = seckillVoucherOperate.execute(
+        Integer result = seckillVoucherOperate.execute(
                 keys,
                 args
         );
+        if (!result.equals(BaseCode.SUCCESS.getCode())) {
+            throw new HmdpFrameException(Objects.requireNonNull(BaseCode.getRc(result)));
+        }
         int r = result.intValue();
         // 2.判断结果是否为0
         if (r != 0) {

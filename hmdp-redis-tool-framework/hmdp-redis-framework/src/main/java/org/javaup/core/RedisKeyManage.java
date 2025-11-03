@@ -22,6 +22,8 @@ public enum RedisKeyManage {
     SECKILL_VOUCHER_KEY("seckill:voucher:%s","秒杀券","value为SeckillVoucher类型","k"),
     
     SECKILL_VOUCHER_KEY_NULL("seckill:voucher_null:%s","秒杀券的数据","value为这是空值","k"),
+    
+    SECKILL_ORDER_KEY("seckill:order:%s","秒杀券的订单","value为用户的集合","k"),
     ;
 
     /**

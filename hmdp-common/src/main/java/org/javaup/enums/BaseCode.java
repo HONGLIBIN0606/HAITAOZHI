@@ -11,51 +11,17 @@ public enum BaseCode {
      * */
     SUCCESS(0, "OK"),
     
-    SYSTEM_ERROR(-1,"系统异常，请稍后重试"),
+    SECKILL_VOUCHER_NOT_EXIST(10001, "秒杀优惠券不存在"),
     
-    PARAMETER_ERROR(-2,"参数验证异常"),
+    SECKILL_VOUCHER_NOT_BEGIN(10002, "秒杀优惠券未开始"),
     
-    DATA_SOURCE_CLOSE_ERROR(-3,"数据源关闭失败"),
+    SECKILL_VOUCHER_IS_OVER(10003, "秒杀优惠券已结束"),
     
-    USER_NOT_LOGIN(1001,"用户未登录"),
+    SECKILL_VOUCHER_STOCK_NOT_EXIST(10004, "秒杀优惠券库存不存在"),
     
-    UID_WORK_ID_ERROR(5000,"uid_work_id设置失败"),
+    SECKILL_VOUCHER_STOCK_INSUFFICIENT(10005, "秒杀优惠券库存不足"),
     
-    COLLECT_TYPE_NOT_EXIST(5001,"采集方式不存在"),
-    
-    METRIC_COLLECT_TYPE(5002,"指标收集类型错误"),
-    
-    COLLECT_SOURCE_NAME_EMPTY(5003,"收集源头名字为空"),
-    
-    COLLECT_TYPE_EMPTY(5004,"收集方式为空"),
-    
-    COLLECT_DETAIL_EMPTY(5005,"具体的收集实现为空"),
-    
-    METRIC_TIME_FORMAT_EMPTY(5006,"统计的时间格式为空"),
-    
-    ARGUMENTS_EMPTY(5007,"指标统计的参数为空"),
-    
-    FUNCTION_TYPE_EMPTY(5008,"函数类型为空"),
-    
-    EXPRESSION_EMPTY(5009,"表达式为空"),
-    
-    VIDEO_DIMENSION_TYPE_NOT_EXIST(5010,"视频维度不存在"),
-    
-    VIDEO_DIMENSION_TYPE_IMPL_NOT_EXIST(5011,"视频维度查询具体实现不存在"),
-    
-    RULE_NOT_EXIST(511,"规则不存在"),
-    
-    METRIC_NOT_EXIST(512,"指标不存在"), 
-    
-    DATA_SAVE_NOT_EXIST(513, "数据保存方式不存在"),
-    
-    DATE_TYPE_NOT_EXIST(514, "时间类型不存在"),
-    
-    MESSAGE_NOT_EXIST(515, "时间类型不存在"),
-    
-    RECONCILIATION_NOT_EXIST(516, "对账不存在"),
-    
-    COLLECT_TYPE_HANDLER_NOT_EXIST(517, "采集类型处理器不存在"),
+    SECKILL_VOUCHER_CLAIM(10006, "秒杀优惠券已领取"),
     ;
     
     private final Integer code;
