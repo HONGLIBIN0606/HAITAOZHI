@@ -44,6 +44,7 @@ mybatis-plus:
 logging:
   level:
     org.javaup: debug
+    AUDIT: INFO
   pattern:
     dateformat: mm:ss.SSS
 bloom-filter:
@@ -56,3 +57,29 @@ bloom-filter:
       name: voucher-id-bloom
       expected-insertions: 100000
       false-probability: 0.01
+seckill:
+  cache:
+    invalidate:
+      retry:
+        maxAttempts: 3
+        initialBackoffMillis: 200
+        maxBackoffMillis: 800
+      dlq:
+        replay:
+          dedupWindowSeconds: 60
+      topic:
+        partitions: 3
+        replicationFactor: 1
+        dlq:
+          partitions: 3
+          replicationFactor: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "prometheus,health,info"
+  endpoint:
+    prometheus:
+      enabled: true
+      

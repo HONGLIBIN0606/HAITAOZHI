@@ -5,7 +5,9 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
+import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
+import org.javaup.entity.Voucher;
 import org.javaup.service.IVoucherService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 
 /**
@@ -35,9 +39,20 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping("seckill")
-    public Result addSeckillVoucher(@Valid @RequestBody SeckillVoucherDto seckillVoucherDto) {
+    public Result<Long> addSeckillVoucher(@Valid @RequestBody SeckillVoucherDto seckillVoucherDto) {
         final Long voucherId = voucherService.addSeckillVoucher(seckillVoucherDto);
         return Result.ok(voucherId);
+    }
+    
+    /**
+     * 修改秒杀券
+     * @param updateSeckillVoucherDto 修改的秒杀优惠券信息
+     * @return 优惠券id
+     */
+    @PostMapping("update/seckill")
+    public Result<Void> updateSeckillVoucher(@Valid @RequestBody UpdateSeckillVoucherDto updateSeckillVoucherDto) {
+        voucherService.updateSeckillVoucher(updateSeckillVoucherDto);
+        return Result.ok();
     }
 
     /**
@@ -46,7 +61,7 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping
-    public Result addVoucher(@Valid @RequestBody VoucherDto voucherDto) {
+    public Result<Long> addVoucher(@Valid @RequestBody VoucherDto voucherDto) {
         final Long voucherId = voucherService.addVoucher(voucherDto);
         return Result.ok(voucherId);
     }
@@ -58,7 +73,7 @@ public class VoucherController {
      * @return 优惠券列表
      */
     @GetMapping("/list/{shopId}")
-    public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
+    public Result<List<Voucher>> queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
        return voucherService.queryVoucherOfShop(shopId);
     }
 }

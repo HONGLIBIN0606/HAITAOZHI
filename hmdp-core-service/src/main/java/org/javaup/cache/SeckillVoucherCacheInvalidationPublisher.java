@@ -1,0 +1,46 @@
+package org.javaup.cache;
+
+import jakarta.annotation.Resource;
+import org.javaup.core.RedisKeyManage;
+import org.javaup.kafka.message.SeckillVoucherInvalidationMessage;
+import org.javaup.kafka.producer.SeckillVoucherInvalidationProducer;
+import org.javaup.redis.RedisCache;
+import org.javaup.redis.RedisKeyBuild;
+import org.javaup.core.SpringUtil;
+import org.springframework.stereotype.Component;
+
+import static org.javaup.constant.Constant.SECKILL_VOUCHER_CACHE_INVALIDATION_TOPIC;
+
+/**
+ * 业务发布入口：触发秒杀券缓存失效广播
+ */
+@Component
+public class SeckillVoucherCacheInvalidationPublisher {
+
+    @Resource
+    private RedisCache redisCache;
+    
+    @Resource
+    private SeckillVoucherInvalidationProducer invalidationProducer;
+    
+    @Resource
+    private SeckillVoucherLocalCache seckillVoucherLocalCache;
+
+    /**
+     * 触发指定券的缓存失效广播，并在当前实例立即清理
+     */
+    public void publishInvalidate(Long voucherId, String reason) {
+        // 1) 当前实例先清理，缩短不一致窗口
+        seckillVoucherLocalCache.invalidate(voucherId);
+        redisCache.del(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId));
+        redisCache.del(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId));
+        redisCache.del(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_NULL_TAG_KEY, voucherId));
+        
+        // 2) 广播Kafka消息到所有实例
+        SeckillVoucherInvalidationMessage payload = new SeckillVoucherInvalidationMessage(voucherId, reason);
+        invalidationProducer.sendPayload(
+                SpringUtil.getPrefixDistinctionName() + "-" + SECKILL_VOUCHER_CACHE_INVALIDATION_TOPIC,
+                payload
+        );
+    }
+}

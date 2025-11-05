@@ -1,10 +1,13 @@
 package org.javaup.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
+import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
 import org.javaup.entity.Voucher;
-import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -18,7 +21,9 @@ public interface IVoucherService extends IService<Voucher> {
 
     Long addVoucher(VoucherDto voucherDto);
     
-    Result queryVoucherOfShop(Long shopId);
+    Result<List<Voucher>> queryVoucherOfShop(Long shopId);
 
     Long addSeckillVoucher(SeckillVoucherDto seckillVoucherDto);
+    
+    void updateSeckillVoucher(UpdateSeckillVoucherDto updateSeckillVoucherDto);
 }

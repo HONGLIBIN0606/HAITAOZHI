@@ -4,9 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import org.javaup.cache.SeckillVoucherCacheInvalidationPublisher;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
+import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.Voucher;
@@ -48,6 +50,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     private BloomFilterHandlerFactory bloomFilterHandlerFactory;
     @Resource
     private RedisCache redisCache;
+    @Resource
+    private SeckillVoucherCacheInvalidationPublisher seckillVoucherCacheInvalidationPublisher;
     
     @Override
     public Long addVoucher(VoucherDto voucherDto) {
@@ -60,7 +64,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     }
     
     @Override
-    public Result queryVoucherOfShop(Long shopId) {
+    public Result<List<Voucher>> queryVoucherOfShop(Long shopId) {
         // 查询优惠券信息
         List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
         // 返回结果
@@ -74,6 +78,70 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         //return doAddSeckillVoucherV1(seckillVoucherDto);
         //黑马点评v2版本
         return doAddSeckillVoucherV2(seckillVoucherDto);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSeckillVoucher(UpdateSeckillVoucherDto updateSeckillVoucherDto) {
+        Long voucherId = updateSeckillVoucherDto.getVoucherId();
+        // 更新 tb_voucher 表的非空字段
+        boolean updatedVoucher = false;
+        var voucherUpdate = this.lambdaUpdate().eq(Voucher::getId, voucherId);
+        if (updateSeckillVoucherDto.getTitle() != null) {
+            voucherUpdate.set(Voucher::getTitle, updateSeckillVoucherDto.getTitle());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getSubTitle() != null) {
+            voucherUpdate.set(Voucher::getSubTitle, updateSeckillVoucherDto.getSubTitle());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getRules() != null) {
+            voucherUpdate.set(Voucher::getRules, updateSeckillVoucherDto.getRules());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getPayValue() != null) {
+            voucherUpdate.set(Voucher::getPayValue, updateSeckillVoucherDto.getPayValue());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getActualValue() != null) {
+            voucherUpdate.set(Voucher::getActualValue, updateSeckillVoucherDto.getActualValue());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getType() != null) {
+            voucherUpdate.set(Voucher::getType, updateSeckillVoucherDto.getType());
+            updatedVoucher = true;
+        }
+        if (updateSeckillVoucherDto.getStatus() != null) {
+            voucherUpdate.set(Voucher::getStatus, updateSeckillVoucherDto.getStatus());
+            updatedVoucher = true;
+        }
+        if (updatedVoucher) {
+            voucherUpdate.set(Voucher::getUpdateTime, LocalDateTimeUtil.now()).update();
+        }
+
+        // 更新 tb_seckill_voucher 表的非空字段（仅时间相关）
+        boolean updatedSeckill = false;
+        var seckillUpdate = seckillVoucherService.lambdaUpdate().eq(SeckillVoucher::getVoucherId, voucherId);
+        if (updateSeckillVoucherDto.getBeginTime() != null) {
+            seckillUpdate.set(SeckillVoucher::getBeginTime, updateSeckillVoucherDto.getBeginTime());
+            updatedSeckill = true;
+        }
+        if (updateSeckillVoucherDto.getEndTime() != null) {
+            seckillUpdate.set(SeckillVoucher::getEndTime, updateSeckillVoucherDto.getEndTime());
+            updatedSeckill = true;
+        }
+        if (updateSeckillVoucherDto.getStock() != null) {
+            seckillUpdate.set(SeckillVoucher::getStock, updateSeckillVoucherDto.getStock());
+            updatedSeckill = true;
+        }
+        if (updatedSeckill) {
+            seckillUpdate.set(SeckillVoucher::getUpdateTime, LocalDateTimeUtil.now()).update();
+        }
+
+        // 更新后清理缓存，等待读路径按新数据重建缓存
+        if (updatedVoucher || updatedSeckill) {
+            seckillVoucherCacheInvalidationPublisher.publishInvalidate(voucherId, "update");
+        }
     }
     
     public Long doAddSeckillVoucherV1(SeckillVoucherDto seckillVoucherDto) {

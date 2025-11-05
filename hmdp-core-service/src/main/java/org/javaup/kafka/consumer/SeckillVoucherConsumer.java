@@ -56,7 +56,9 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         super(SeckillVoucherMessage.class);
     }
     
-    @KafkaListener(topics = {SPRING_INJECT_PREFIX_DISTINCTION_NAME + "-" + SECKILL_VOUCHER_TOPIC})
+    @KafkaListener(
+            topics = {SPRING_INJECT_PREFIX_DISTINCTION_NAME + "-" + SECKILL_VOUCHER_TOPIC}
+    )
     public void onMessage(String value,
                           @Headers Map<String, Object> headers,
                           @Header(KafkaHeaders.RECEIVED_KEY) String key) {
