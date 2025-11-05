@@ -132,17 +132,19 @@ const seckill = async (v) => {
   let loading = null
   try {
     if (seckillInProgress.value) {
-      ElMessage.info('正在确认订单，请稍等…')
+      // 已在确认中，覆盖层仍在，直接返回以避免重复点击
       return
     }
     seckillInProgress.value = true
     loading = ElLoading.service({
+      fullscreen: true,
+      lock: true,
       text: '正在确认订单，请稍等…',
-      background: 'rgba(0,0,0,0.2)'
+      background: 'rgba(0,0,0,0.35)',
+      customClass: 'seckill-overlay'
     })
     const { data } = await seckillVoucher(v.id)
     // 开始轮询确认订单生成（固定时长 11 秒）
-    ElMessage.info('正在确认订单，请稍等…')
     await pollSeckillOrder(String(data), { delay: 800, timeoutMs: 11000 })
   } catch (error) {
     console.error(error)

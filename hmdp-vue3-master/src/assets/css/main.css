@@ -57,3 +57,31 @@ html,body,#app{
     margin-right: 0;
 }
 
+/* 秒杀确认遮罩的强化视觉效果 */
+.seckill-overlay {
+    z-index: 5000 !important;
+    backdrop-filter: blur(3px);
+}
+.seckill-overlay .el-loading-spinner {
+    padding: 24px 28px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.seckill-overlay .el-loading-spinner .circular {
+    width: 64px;
+    height: 64px;
+    border-width: 6px;
+}
+.seckill-overlay .el-loading-spinner .path {
+    stroke: #fff;
+    opacity: 0.95;
+}
+.seckill-overlay .el-loading-text {
+    margin-top: 12px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
