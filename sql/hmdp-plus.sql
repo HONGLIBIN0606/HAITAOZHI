@@ -166,6 +166,8 @@ CREATE TABLE `tb_seckill_voucher` (
   `id` bigint NOT NULL,
   `voucher_id` bigint unsigned NOT NULL COMMENT '关联的优惠券的id',
   `stock` int NOT NULL COMMENT '库存',
+  `allowed_levels` varchar(255) DEFAULT NULL COMMENT '允许参与的会员等级，逗号分隔',
+  `min_level` int DEFAULT NULL COMMENT '最低会员等级',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `begin_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '生效时间',
   `end_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '失效时间',
@@ -180,7 +182,7 @@ CREATE TABLE `tb_seckill_voucher` (
 
 LOCK TABLES `tb_seckill_voucher` WRITE;
 /*!40000 ALTER TABLE `tb_seckill_voucher` DISABLE KEYS */;
-INSERT INTO `tb_seckill_voucher` VALUES (1985292621462933505,1985292621249024001,200,'2025-11-03 10:27:00','2025-11-02 13:00:00','2025-12-02 15:59:59','2025-11-03 10:27:00');
+INSERT INTO `tb_seckill_voucher` VALUES (1985292621462933505,1985292621249024001,200,NULL,NULL,'2025-11-03 10:27:00','2025-11-02 13:00:00','2025-12-02 15:59:59','2025-11-03 10:27:00');
 /*!40000 ALTER TABLE `tb_seckill_voucher` ENABLE KEYS */;
 UNLOCK TABLES;
 

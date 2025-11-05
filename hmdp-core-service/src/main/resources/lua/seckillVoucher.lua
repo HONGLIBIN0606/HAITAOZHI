@@ -73,4 +73,4 @@ redis.call('hset', traceLogKey, traceId, logEntry)
 if ttlSeconds and ttlSeconds > 0 then
   redis.call('expire', traceLogKey, ttlSeconds)
 end
-return string.format('{"%s": %d, "%s": %s, "%s": %s, "%s": %s}', 'code', 0, 'beforeQty', beforeQty, 'deductQty', deductQty, 'afterQty', afterQty)
+return string.format('{"%s": %d, "%s": %s, "%s": %s, "%s": %s}', 'code', 0, 'beforeQty', beforeQty, 'deductQty', changeQty, 'afterQty', afterQty)

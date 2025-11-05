@@ -44,9 +44,8 @@ public class SeckillVoucherDto implements Serializable {
     private String subTitle;
 
     /**
-     * 使用规则
+     * 使用规则（普通券可用，秒杀受众不再依赖该字段）
      */
-    @NotBlank
     private String rules;
 
     /**
@@ -92,4 +91,14 @@ public class SeckillVoucherDto implements Serializable {
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
+
+    /**
+     * 允许参与的会员等级，逗号分隔，如："1,2,3"
+     */
+    private String allowedLevels;
+
+    /**
+     * 最低会员等级
+     */
+    private Integer minLevel;
 }

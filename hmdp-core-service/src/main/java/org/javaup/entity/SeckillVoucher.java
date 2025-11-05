@@ -42,6 +42,16 @@ public class SeckillVoucher implements Serializable {
     private Integer stock;
 
     /**
+     * 允许参与的会员等级，逗号分隔，如："1,2,3"
+     */
+    private String allowedLevels;
+
+    /**
+     * 最低会员等级
+     */
+    private Integer minLevel;
+
+    /**
      * 创建时间
      */
     private LocalDateTime createTime;

@@ -22,6 +22,8 @@ public enum BaseCode {
     SECKILL_VOUCHER_STOCK_INSUFFICIENT(10005, "秒杀优惠券库存不足"),
     
     SECKILL_VOUCHER_CLAIM(10006, "秒杀优惠券已领取"),
+    
+    USER_NOT_EXIST(20000, "用户不存在"),
     ;
     
     private final Integer code;

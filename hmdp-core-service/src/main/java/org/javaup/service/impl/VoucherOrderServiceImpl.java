@@ -1,18 +1,22 @@
 package org.javaup.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.core.SpringUtil;
 import org.javaup.dto.Result;
 import org.javaup.dto.VoucherOrderDto;
 import org.javaup.entity.SeckillVoucher;
+import org.javaup.entity.UserInfo;
 import org.javaup.entity.VoucherOrder;
 import org.javaup.enums.BaseCode;
 import org.javaup.enums.LogType;
@@ -26,7 +30,9 @@ import org.javaup.redis.RedisCacheImpl;
 import org.javaup.redis.RedisKeyBuild;
 import org.javaup.repeatexecutelimit.annotion.RepeatExecuteLimit;
 import org.javaup.service.ISeckillVoucherService;
+import org.javaup.service.IUserInfoService;
 import org.javaup.service.IVoucherOrderService;
+import org.javaup.service.IVoucherService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.utils.RedisIdWorker;
 import org.javaup.utils.UserHolder;
@@ -45,15 +51,20 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.javaup.constant.Constant.SECKILL_VOUCHER_TOPIC;
 import static org.javaup.constant.RepeatExecuteLimitConstants.SECKILL_VOUCHER_ORDER;
@@ -93,6 +104,12 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     
     @Resource
     private RedisCacheImpl redisCache;
+    
+    @Resource
+    private IVoucherService voucherService;
+    
+    @Resource
+    private IUserInfoService userInfoService;
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -251,6 +268,32 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     public Result<Long> doSeckillVoucherV2(Long voucherId) {
         SeckillVoucher seckillVoucher = seckillVoucherService.queryByVoucherId(voucherId);
         Long userId = UserHolder.getUser().getId();
+        verifyUserLevel(seckillVoucher,userId);
+        
+        // 限流：按客户端IP与用户维度简单限频
+        final int IP_LIMIT_WINDOW_SECONDS = 5;
+        final int IP_LIMIT_MAX_ATTEMPTS = 3;
+        final int USER_LIMIT_WINDOW_SECONDS = 60;
+        final int USER_LIMIT_MAX_ATTEMPTS = 5;
+        String clientIp = resolveClientIp();
+        if (clientIp != null && !clientIp.isEmpty() && !"unknown".equalsIgnoreCase(clientIp)) {
+            RedisKeyBuild ipKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_IP_TAG_KEY, voucherId, clientIp);
+            Long ipCur = redisCache.incrBy(ipKey, 1);
+            if (ipCur != null && ipCur == 1L) {
+                redisCache.expire(ipKey, IP_LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
+            }
+            if (ipCur != null && ipCur > IP_LIMIT_MAX_ATTEMPTS) {
+                throw new HmdpFrameException("请求过于频繁，请稍后再试");
+            }
+        }
+        RedisKeyBuild userKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_USER_TAG_KEY, voucherId, userId);
+        Long userCur = redisCache.incrBy(userKey, 1);
+        if (userCur != null && userCur == 1L) {
+            redisCache.expire(userKey, USER_LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        if (userCur != null && userCur > USER_LIMIT_MAX_ATTEMPTS) {
+            throw new HmdpFrameException("操作过于频繁，请稍后再试");
+        }
         long orderId = snowflakeIdGenerator.nextId();
         long traceId = snowflakeIdGenerator.nextId();
         // 执行lua脚本（方案A：单槽位Hash Tag键，不分片）
@@ -291,6 +334,89 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         
         // 返回订单id
         return Result.ok(orderId);
+    }
+    
+    public void verifyUserLevel(SeckillVoucher seckillVoucher,Long userId){
+        String allowedLevelsStr = seckillVoucher.getAllowedLevels();
+        Integer minLevel = seckillVoucher.getMinLevel();
+        boolean hasLevelRule = StrUtil.isNotBlank(allowedLevelsStr) || Objects.nonNull(minLevel);
+        if (!hasLevelRule) {
+            return;
+        }
+        //TODO
+        UserInfo userInfo = userInfoService.getById(userId);
+        if (Objects.isNull(userInfo)) {
+            throw new HmdpFrameException(BaseCode.USER_NOT_EXIST);
+        }
+        boolean allowed = true;
+        Integer level = userInfo.getLevel();
+        // allowedLevels
+        if (StrUtil.isNotBlank(allowedLevelsStr)) {
+            try {
+                Set<Integer> allowedLevels = Arrays.stream(allowedLevelsStr.split(","))
+                        .map(String::trim)
+                        .filter(StrUtil::isNotBlank)
+                        .map(Integer::valueOf)
+                        .collect(Collectors.toSet());
+                if (CollectionUtil.isNotEmpty(allowedLevels)) {
+                    allowed = allowedLevels.contains(level);
+                }
+            } catch (Exception parseEx) {
+                log.warn("allowedLevels 解析失败, voucherId={}, raw={}", 
+                        seckillVoucher.getVoucherId(), 
+                        allowedLevelsStr, parseEx);
+            }
+        }
+        // minLevel
+        if (allowed && Objects.nonNull(minLevel)) {
+            allowed = Objects.nonNull(level) && level >= minLevel;
+        }
+        if (!allowed) {
+            throw new HmdpFrameException("当前会员级别不满足参与条件");
+        }
+    }
+
+    private String resolveClientIp(){
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs == null) {
+                return "unknown";
+            }
+            HttpServletRequest request = attrs.getRequest();
+            String xff = request.getHeader("X-Forwarded-For");
+            if (xff != null && !xff.isEmpty()) {
+                String[] parts = xff.split(",");
+                if (parts.length > 0) {
+                    String ip = parts[0].trim();
+                    if (!ip.isEmpty()) {
+                        return ip;
+                    }
+                }
+            }
+            String realIp = request.getHeader("X-Real-IP");
+            if (realIp != null && !realIp.isEmpty()) {
+                return realIp;
+            }
+            return request.getRemoteAddr();
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    /**
+     * 简单的受众规则载体，按存在字段进行校验
+     * */
+    private static class AudienceRule {
+        public Set<Integer> allowedLevels;
+        public Integer minLevel;
+        public Set<String> allowedCities;
+        
+        boolean hasLevelRule(){
+            return (allowedLevels != null && !allowedLevels.isEmpty()) || minLevel != null;
+        }
+        boolean hasCityRule(){
+            return allowedCities != null && !allowedCities.isEmpty();
+        }
     }
 
     @Override
@@ -349,9 +475,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 .gt("stock", 0)
                 .update();
         if (!success) {
-            // 扣减失败
-            log.error("优惠券库存不足！优惠券id:{}", voucherOrderDto.getVoucherId());
-            return;
+            // 扣减失败：触发消息侧回滚Redis数据
+            throw new HmdpFrameException("优惠券库存不足！优惠券id:" + voucherOrderDto.getVoucherId());
         }
         // 创建订单
         VoucherOrder voucherOrder = new VoucherOrder();

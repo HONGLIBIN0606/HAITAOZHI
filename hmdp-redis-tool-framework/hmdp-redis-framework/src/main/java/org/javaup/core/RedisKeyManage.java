@@ -42,6 +42,16 @@ public enum RedisKeyManage {
      */
     SECKILL_TRACE_LOG_TAG_KEY("seckill:trace:log:{%s}","秒杀券id（同槽位HashTag）","value为操作记录日志","k"),
     
+    /**
+     * 单槽位IP限流计数器（带Hash Tag，voucherId在同槽位）
+     */
+    SECKILL_LIMIT_IP_TAG_KEY("seckill:limit:ip:{%s}:%s","秒杀券id（同槽位HashTag）","value为按IP的限流计数","k"),
+
+    /**
+     * 单槽位用户限流计数器（带Hash Tag，voucherId在同槽位）
+     */
+    SECKILL_LIMIT_USER_TAG_KEY("seckill:limit:user:{%s}:%s","秒杀券id（同槽位HashTag）","value为按用户的限流计数","k"),
+    
     DB_SECKILL_ORDER_KEY("db:seckill:order:%s","秒杀券的订单id","value为订单","k"),
     ;
 

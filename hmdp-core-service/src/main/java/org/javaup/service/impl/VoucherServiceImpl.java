@@ -134,6 +134,15 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             seckillUpdate.set(SeckillVoucher::getStock, updateSeckillVoucherDto.getStock());
             updatedSeckill = true;
         }
+        // 受众规则字段更新
+        if (updateSeckillVoucherDto.getAllowedLevels() != null) {
+            seckillUpdate.set(SeckillVoucher::getAllowedLevels, updateSeckillVoucherDto.getAllowedLevels());
+            updatedSeckill = true;
+        }
+        if (updateSeckillVoucherDto.getMinLevel() != null) {
+            seckillUpdate.set(SeckillVoucher::getMinLevel, updateSeckillVoucherDto.getMinLevel());
+            updatedSeckill = true;
+        }
         if (updatedSeckill) {
             seckillUpdate.set(SeckillVoucher::getUpdateTime, LocalDateTimeUtil.now()).update();
         }
@@ -186,6 +195,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         seckillVoucher.setStock(seckillVoucherDto.getStock());
         seckillVoucher.setBeginTime(seckillVoucherDto.getBeginTime());
         seckillVoucher.setEndTime(seckillVoucherDto.getEndTime());
+        // 受众规则字段
+        seckillVoucher.setAllowedLevels(seckillVoucherDto.getAllowedLevels());
+        seckillVoucher.setMinLevel(seckillVoucherDto.getMinLevel());
         seckillVoucherService.save(seckillVoucher);
         // 如果数据库查询不是空的，将秒杀优惠券信息写入缓存，TTL为距离结束时间的秒数
         long ttlSeconds = Math.max(
