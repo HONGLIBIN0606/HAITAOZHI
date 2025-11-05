@@ -460,10 +460,12 @@ onMounted(() => {
   display: flex;
   margin-top: 10px;
   background-color: #fff;
-  border: 1px solid #f1f1f1;
-  border-radius: 4px;
+  border: 1px solid #eee;
+  border-radius: 10px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 12px 12px 12px 16px;
 }
 
 .voucher-circle {
@@ -487,7 +489,7 @@ onMounted(() => {
 .voucher-left {
   flex: 1;
   padding: 10px;
-  border-right: 1px dashed #f1f1f1;
+  border-right: 1px solid #f0f0f0;
 }
 
 .voucher-title {
@@ -510,39 +512,78 @@ onMounted(() => {
   gap: 5px;
 }
 
+/* 放大价格数字，折扣轻量展示 */
+.voucher-price div {
+  font-size: 22px;
+  font-weight: 700;
+}
+.voucher-price span {
+  font-size: 14px;
+  color: #ff6d6d;
+  padding: 0 6px;
+  line-height: 18px;
+  border-radius: 9px;
+  background-color: #fff2f0;
+}
+
 .voucher-right {
-  width: 100px;
+  flex: 0 0 220px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #f63;
-  color: #fff;
+  padding: 10px;
 }
 
 .voucher-btn {
-  padding: 5px 15px;
-  border: 1px solid #fff;
-  border-radius: 15px;
+  width: 100%;
+  max-width: 240px;
+  height: 40px;
+  line-height: 40px;
+  border: none;
+  border-radius: 20px;
   cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff7a45 0%, #ff4d4f 100%);
+  box-shadow: 0 6px 14px rgba(255, 77, 79, 0.25);
 }
 
 .disable-btn {
-  opacity: 0.5;
+  opacity: 0.7;
   cursor: not-allowed;
+  background: #d9d9d9;
+  box-shadow: none;
+  color: #fff;
 }
 
 .seckill-box {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
 }
 
 .seckill-stock {
   font-size: 12px;
-  margin: 5px 0;
+  color: #8a8a8a;
+  margin-top: 4px;
+}
+.seckill-stock span {
+  display: inline-block;
+  padding: 0 6px;
+  line-height: 18px;
+  border-radius: 9px;
+  background-color: #fff5f0;
+  color: #ff4d4f;
+  margin: 0 2px;
 }
 
 .seckill-time {
   font-size: 12px;
+  color: #8a8a8a;
 }
 
 .shop-comments {
