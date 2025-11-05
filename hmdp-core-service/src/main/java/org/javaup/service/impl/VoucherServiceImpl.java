@@ -55,9 +55,14 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     
     @Override
     public Long addVoucher(VoucherDto voucherDto) {
+        Voucher one = lambdaQuery().orderByDesc(Voucher::getId).one();
+        long newId = 1L;
+        if (one != null) {
+            newId = one.getId() + 1;
+        }
         Voucher voucher = new Voucher();
         BeanUtil.copyProperties(voucherDto, voucher);
-        voucher.setId(snowflakeIdGenerator.nextId());
+        voucher.setId(newId);
         save(voucher);
         bloomFilterHandlerFactory.get(BLOOM_FILTER_HANDLER_VOUCHER).add(voucher.getId().toString());
         return voucher.getId();

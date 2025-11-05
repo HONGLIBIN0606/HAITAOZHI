@@ -45,7 +45,7 @@ public class VoucherController {
     }
     
     /**
-     * 修改秒杀券
+     * 更新秒杀券
      * @param updateSeckillVoucherDto 修改的秒杀优惠券信息
      * @return 优惠券id
      */

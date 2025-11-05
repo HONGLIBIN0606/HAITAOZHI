@@ -271,7 +271,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         Long userId = UserHolder.getUser().getId();
         verifyUserLevel(seckillVoucher,userId);
         //限流
-        rateLimitHandler.execute(voucherId,userId);
+        //rateLimitHandler.execute(voucherId,userId);
         long orderId = snowflakeIdGenerator.nextId();
         long traceId = snowflakeIdGenerator.nextId();
         // 执行lua脚本（方案A：单槽位Hash Tag键，不分片）
