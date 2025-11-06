@@ -8,10 +8,11 @@ local traceLogKey = KEYS[3]
 -- 优惠券id
 local voucherId = ARGV[1]
 -- 用户id
-local userId = ARGV[2]
+local userId = (ARGV[2])
 -- 订单id（回滚脚本不使用，但保留以兼容消息）
 local orderId = ARGV[3]
-local seckillVoucherOrderOperate = ARGV[4]
+-- 操作码（字符串入参，需要转为数字比较）
+local seckillVoucherOrderOperate = tonumber(ARGV[4])
 local traceId = ARGV[5]
 local logType = ARGV[6]
 -- 备注：方案A不分片，所有操作在同槽位单键内完成
@@ -28,8 +29,10 @@ local changeQty = 1
 local afterQty = beforeQty + changeQty
 redis.call('incrby', stockKey, changeQty)
 if seckillVoucherOrderOperate == 1 then
-    -- 删除下单记录
-    redis.call('srem', seckillUserKey, userId)
+    -- 删除下单记录（先判断存在再移除更稳妥）
+    if (redis.call('sismember', seckillUserKey, userId) == 1) then
+        redis.call('srem', seckillUserKey, userId)
+    end
 end
 -- 记录回滚日志
 local timeArr = redis.call('TIME')

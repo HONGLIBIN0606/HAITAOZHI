@@ -13,3 +13,9 @@ export const getVoucherOrderIdByVoucherId = (voucherId) =>
   request.post('/voucher-order/get/seckill/voucher/order-id/by/voucher-id', {
     voucherId: String(voucherId)
   })
+
+// 取消已领取的优惠券
+export const cancelVoucherOrder = (voucherId) =>
+  request.post('/voucher-order/cancel', {
+    voucherId: String(voucherId)
+  })

@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, ArrowRight, Location, Timer } from '@element-plus/icons-vue'
 import { ElLoading } from 'element-plus'
 import { getShopById } from '@/api/shop'
-import { getVoucherList, seckillVoucher, getSeckillOrderId, getVoucherOrderIdByVoucherId } from '@/api/voucher'
+import { getVoucherList, seckillVoucher, getSeckillOrderId, getVoucherOrderIdByVoucherId, cancelVoucherOrder } from '@/api/voucher'
 import { useUserStore } from '@/stores'
 
 const router = useRouter()
@@ -207,6 +207,32 @@ const seckill = async (v) => {
   }
 }
 
+// 取消已领取的优惠券
+const cancelVoucher = async (v) => {
+  if (!userStore.token) {
+    ElMessage.error('请先登录')
+    setTimeout(() => {
+      router.push('/login')
+    }, 200)
+    return
+  }
+  if (!v?.id) return
+  try {
+    const res = await cancelVoucherOrder(String(v.id))
+    if (res?.success && String(res.data) === 'true') {
+      ElMessage.success('已取消领取')
+      // 更新本地状态并刷新列表以同步库存
+      purchasedMap.value[String(v.id)] = false
+      await queryVoucher(route.params.id)
+    } else {
+      ElMessage.error(res?.errorMsg || '取消失败')
+    }
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('取消失败')
+  }
+}
+
 // 返回上一页
 const goBack = () => {
   router.back()
@@ -339,6 +365,10 @@ onMounted(() => {
               剩余 <span>{{ v.stock }}</span> 张
             </div>
             <div class="seckill-time">{{ formatTime(v) }}</div>
+            <div v-if="isPurchased(v.id)" class="seckill-status">
+              <span class="purchased-tag">已购</span>
+              <span class="cancel-link" @click="cancelVoucher(v)">取消领取</span>
+            </div>
           </div>
           <div class="voucher-btn" v-else>抢购</div>
         </div>
@@ -677,6 +707,39 @@ onMounted(() => {
 .seckill-time {
   font-size: 12px;
   color: #8a8a8a;
+}
+
+.seckill-status {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.purchased-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  line-height: 20px;
+  border-radius: 10px;
+  background-color: #fff2f0;
+  color: #ff4d4f;
+  font-weight: 600;
+}
+.cancel-link {
+  display: inline-block;
+  padding: 4px 12px;
+  line-height: 20px;
+  border-radius: 12px;
+  border: 1px solid #409eff;
+  background-color: #409eff;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.cancel-link:hover {
+  background-color: #337ecc;
+  border-color: #337ecc;
 }
 
 .shop-comments {

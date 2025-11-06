@@ -39,22 +39,32 @@ import static org.javaup.constant.Constant.SPRING_INJECT_PREFIX_DISTINCTION_NAME
 @Component
 public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVoucherMessage> {
     
-    // 消息延迟阈值（毫秒），超过阈值则丢弃并回滚
+    /**
+     * 消息延迟阈值（毫秒），超过阈值则丢弃并回滚
+     * */
     public static Long MESSAGE_DELAY_TIME = 10000L;
     
-    // 订单服务：负责创建秒杀订单
+    /**
+     * 订单服务：负责创建秒杀订单
+     * */
     @Resource
     private IVoucherOrderService voucherOrderService;
     
-    // Redis 回滚封装组件：包含 Lua 调用、指数退避重试与失败日志
+    /**
+     * Redis 回滚封装组件：包含 Lua 调用、指数退避重试与失败日志
+     * */
     @Resource
     private RedisVoucherData redisVoucherData;
     
-    // 对账日志服务：记录消费成功/失败等业务一致性日志
+    /**
+     * 对账日志服务：记录消费成功/失败等业务一致性日志
+     * */
     @Resource
     private IVoucherReconcileLogService voucherReconcileLogService;
     
-    // 雪花算法：生成贯穿回滚/日志的 traceId
+    /**
+     * 雪花算法：生成贯穿回滚/日志的 traceId
+     * */
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
     

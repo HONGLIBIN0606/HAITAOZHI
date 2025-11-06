@@ -23,12 +23,15 @@ import org.javaup.entity.VoucherOrder;
 import org.javaup.entity.VoucherOrderRouter;
 import org.javaup.enums.BaseCode;
 import org.javaup.enums.LogType;
+import org.javaup.enums.SeckillVoucherOrderOperate;
 import org.javaup.exception.HmdpFrameException;
 import org.javaup.kafka.message.SeckillVoucherMessage;
 import org.javaup.kafka.producer.SeckillVoucherProducer;
+import org.javaup.kafka.redis.RedisVoucherData;
 import org.javaup.lua.SeckillVoucherDomain;
 import org.javaup.lua.SeckillVoucherOperate;
 import org.javaup.mapper.VoucherOrderMapper;
+import org.javaup.mapper.VoucherOrderRouterMapper;
 import org.javaup.redis.RedisCacheImpl;
 import org.javaup.redis.RedisKeyBuild;
 import org.javaup.repeatexecutelimit.annotion.RepeatExecuteLimit;
@@ -111,6 +114,15 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     
     @Resource
     private IUserInfoService userInfoService;
+    
+    @Resource
+    private VoucherOrderMapper voucherOrderMapper;
+    
+    @Resource
+    private VoucherOrderRouterMapper voucherOrderRouterMapper;
+    
+    @Resource
+    private RedisVoucherData redisVoucherData;
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -477,8 +489,30 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
     
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean cancel(CancelVoucherOrderDto cancelVoucherOrderDto) {
-        return null;
+        VoucherOrder voucherOrder = lambdaQuery()
+                .eq(VoucherOrder::getUserId, UserHolder.getUser().getId())
+                .eq(VoucherOrder::getVoucherId, cancelVoucherOrderDto.getVoucherId())
+                .one();
+        if (Objects.isNull(voucherOrder)) {
+            throw new HmdpFrameException(BaseCode.SECKILL_VOUCHER_ORDER_NOT_EXIST);
+        }
+        Integer i = voucherOrderMapper.deleteVoucherOrder(cancelVoucherOrderDto.getVoucherId(), UserHolder.getUser().getId());
+        Integer j = voucherOrderRouterMapper.deleteVoucherOrderRouter(voucherOrder.getId());
+        
+        
+        Boolean result = i > 0 && j > 0;
+        if (result) {
+            long traceId = snowflakeIdGenerator.nextId();
+            redisVoucherData.rollbackRedisVoucherData(
+                    SeckillVoucherOrderOperate.YES,
+                    traceId,
+                    voucherOrder.getVoucherId(),
+                    voucherOrder.getUserId(),
+                    voucherOrder.getId());
+        }
+        return result;
     }
 
    /*
