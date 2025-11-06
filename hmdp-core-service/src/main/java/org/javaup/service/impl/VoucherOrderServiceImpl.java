@@ -18,13 +18,12 @@ import org.javaup.dto.VoucherOrderDto;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.UserInfo;
 import org.javaup.entity.VoucherOrder;
+import org.javaup.entity.VoucherOrderRouter;
 import org.javaup.enums.BaseCode;
 import org.javaup.enums.LogType;
 import org.javaup.exception.HmdpFrameException;
-import org.javaup.execute.RateLimitHandler;
 import org.javaup.kafka.message.SeckillVoucherMessage;
 import org.javaup.kafka.producer.SeckillVoucherProducer;
-import org.javaup.kafka.redis.RedisVoucherData;
 import org.javaup.lua.SeckillVoucherDomain;
 import org.javaup.lua.SeckillVoucherOperate;
 import org.javaup.mapper.VoucherOrderMapper;
@@ -33,8 +32,8 @@ import org.javaup.redis.RedisKeyBuild;
 import org.javaup.repeatexecutelimit.annotion.RepeatExecuteLimit;
 import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IUserInfoService;
+import org.javaup.service.IVoucherOrderRouterService;
 import org.javaup.service.IVoucherOrderService;
-import org.javaup.service.IVoucherService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.utils.RedisIdWorker;
 import org.javaup.utils.UserHolder;
@@ -106,16 +105,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     private RedisCacheImpl redisCache;
     
     @Resource
-    private IVoucherService voucherService;
+    private IVoucherOrderRouterService voucherOrderRouterService;
     
     @Resource
     private IUserInfoService userInfoService;
-    
-    @Resource
-    private RateLimitHandler rateLimitHandler;
-    
-    @Resource
-    private RedisVoucherData redisVoucherData;
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -431,18 +424,26 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         BeanUtils.copyProperties(voucherOrderDto, voucherOrder);
         voucherOrder.setCreateTime(LocalDateTimeUtil.now());
         save(voucherOrder);
+        VoucherOrderRouter voucherOrderRouter = new VoucherOrderRouter();
+        voucherOrderRouter.setId(snowflakeIdGenerator.nextId());
+        voucherOrderRouter.setOrderId(voucherOrder.getId());
+        voucherOrderRouter.setUserId(userId);
+        voucherOrderRouter.setVoucherId(voucherOrder.getVoucherId());
+        voucherOrderRouter.setCreateTime(LocalDateTimeUtil.now());
+        voucherOrderRouter.setUpdateTime(LocalDateTimeUtil.now());
+        voucherOrderRouterService.save(voucherOrderRouter);
         // 订单存放到redis
         redisCache.set(RedisKeyBuild.createRedisKey(
                 RedisKeyManage.DB_SECKILL_ORDER_KEY,voucherOrderDto.getId()),
                 voucherOrder,
-                11, 
+                60, 
                 TimeUnit.SECONDS
         );
         return true;
     }
     
     @Override
-    public Long getSeckillVoucherOrder(final GetVoucherOrderDto getVoucherOrderDto) {
+    public Long getSeckillVoucherOrder(GetVoucherOrderDto getVoucherOrderDto) {
         VoucherOrder voucherOrder = 
                 redisCache.get(RedisKeyBuild.createRedisKey(
                         RedisKeyManage.DB_SECKILL_ORDER_KEY, 
@@ -450,6 +451,13 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                         VoucherOrder.class);
         if (Objects.nonNull(voucherOrder)) {
             return voucherOrder.getId();
+        }
+        VoucherOrderRouter voucherOrderRouter = 
+                voucherOrderRouterService.lambdaQuery()
+                        .eq(VoucherOrderRouter::getOrderId, getVoucherOrderDto.getOrderId())
+                        .one();
+        if (Objects.nonNull(voucherOrderRouter)) {
+            return voucherOrderRouter.getOrderId();
         }
         return null;
     }

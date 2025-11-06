@@ -143,9 +143,14 @@ const seckill = async (v) => {
       background: 'rgba(0,0,0,0.35)',
       customClass: 'seckill-overlay'
     })
-    const { data } = await seckillVoucher(v.id)
-    // 开始轮询确认订单生成（固定时长 11 秒）
-    await pollSeckillOrder(String(data), { delay: 800, timeoutMs: 11000 })
+    const res = await seckillVoucher(v.id)
+    // 仅在秒杀接口返回成功时才进行轮询确认订单
+    if (res && res.success) {
+      await pollSeckillOrder(String(res.data), { delay: 800, timeoutMs: 11000 })
+    } else {
+      ElMessage.error(res?.errorMsg || '抢购失败')
+      return
+    }
   } catch (error) {
     console.error(error)
     ElMessage.error('抢购失败')
