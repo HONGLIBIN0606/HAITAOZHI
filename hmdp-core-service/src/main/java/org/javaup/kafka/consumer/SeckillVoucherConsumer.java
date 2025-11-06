@@ -149,10 +149,10 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         }
     }
     
-    @Override
     /**
      * 失败后处理：消费异常时回滚 Redis 并记录对账日志（异常）。
      */
+    @Override
     protected void afterConsumeFailure(final MessageExtend<SeckillVoucherMessage> message, 
                                        final Throwable throwable) {
         super.afterConsumeFailure(message, throwable);

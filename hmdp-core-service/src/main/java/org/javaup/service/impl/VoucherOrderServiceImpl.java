@@ -500,9 +500,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
         Integer i = voucherOrderMapper.deleteVoucherOrder(cancelVoucherOrderDto.getVoucherId(), UserHolder.getUser().getId());
         Integer j = voucherOrderRouterMapper.deleteVoucherOrderRouter(voucherOrder.getId());
+        boolean rollbackStockResult = seckillVoucherService.rollbackStock(cancelVoucherOrderDto.getVoucherId());
         
-        
-        Boolean result = i > 0 && j > 0;
+        Boolean result = i > 0 && j > 0 && rollbackStockResult;
         if (result) {
             long traceId = snowflakeIdGenerator.nextId();
             redisVoucherData.rollbackRedisVoucherData(

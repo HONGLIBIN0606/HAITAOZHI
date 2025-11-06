@@ -8,6 +8,7 @@ import {
 import { ref } from 'vue'
 import router from '@/router'
 import FootBar from '@/components/FootBar.vue'
+import { User } from '@element-plus/icons-vue'
 const isReachBottom = ref(false)
 const types = ref([])
 const blogs = ref([])
@@ -89,6 +90,10 @@ const toShopList = (id, name) => {
 const toBlogDetail = (b) => {
   router.push(`/blogDetail/${b.id}`)
 }
+// 跳转到个人主页
+const toInfo = () => {
+  router.push('/InfoHtml')
+}
 </script>
 
 <template>
@@ -101,8 +106,8 @@ const toBlogDetail = (b) => {
         </template>
       </el-input>
     </div>
-    <div class="header-icon" @click="toPage(4)">
-      <i class="el-icon-user"></i>
+    <div class="header-icon" @click="toInfo">
+      <el-icon><User /></el-icon>
     </div>
   </div>
   <div class="type-list">

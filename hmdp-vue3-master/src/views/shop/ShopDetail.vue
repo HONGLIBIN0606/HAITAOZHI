@@ -809,4 +809,36 @@ onMounted(() => {
   color: #999;
   font-size: 12px;
 }
+
+/* 优化：秒杀确认时的加载遮罩与文字样式（全局生效） */
+:global(.seckill-overlay) {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 2001;
+}
+
+:global(.seckill-overlay .el-loading-spinner) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+:global(.seckill-overlay .el-loading-spinner .circular) {
+  width: 42px;
+  height: 42px;
+  stroke: #ff4d4f; /* 与主题色协调 */
+}
+
+:global(.seckill-overlay .el-loading-text) {
+  margin-top: 2px;
+  font-size: 20px; /* 调大文字 */
+  font-weight: 700;
+  color: #333;
+  letter-spacing: 0.3px;
+}
 </style>

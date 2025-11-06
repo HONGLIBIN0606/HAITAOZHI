@@ -16,6 +16,7 @@ import org.javaup.servicelock.LockType;
 import org.javaup.util.ServiceLockTool;
 import org.redisson.api.RLock;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +48,9 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
 
     @Resource
     private SeckillVoucherLocalCache seckillVoucherLocalCache;
+    
+    @Resource
+    private SeckillVoucherMapper seckillVoucherMapper;
 
     
     @Override
@@ -128,5 +132,11 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
         }finally {
             lock.unlock();
         }
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean rollbackStock(final Long voucherId) {
+        return seckillVoucherMapper.rollbackStock(voucherId) > 0;
     }
 }

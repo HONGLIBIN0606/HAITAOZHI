@@ -14,4 +14,6 @@ import org.javaup.entity.SeckillVoucher;
 public interface ISeckillVoucherService extends IService<SeckillVoucher> {
     
     SeckillVoucher queryByVoucherId(Long voucherId);
+    
+    boolean rollbackStock(Long voucherId);
 }

@@ -19,13 +19,18 @@ html,body,#app{
 }
 .foot {
     width: 100%;
-    height: 8%;
+    min-height: 54px;
+    height: 8vh;
     display: flex;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
     box-shadow: 0 -1px 2px 1px rgba(0, 0, 0, 0.1);
-    position: absolute;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
+    z-index: 999;
+    background: #fff;
 }
 .foot .add-btn {
     width: 38px;
@@ -37,13 +42,19 @@ html,body,#app{
     width: 20%;
     color: #82848a;
     text-align: center;
+    position: relative;
 }
 .foot-view {
-    font-size: 26px;
+    font-size: 22px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
+/* 移除圆形背景，保留纯图标样式 */
 .foot-text{
-    font-size: 8px;
-    margin-top: -4px;
+    font-size: 12px;
+    margin-top: 4px;
 }
 .foot-text, .foot-view{
     text-align: center;

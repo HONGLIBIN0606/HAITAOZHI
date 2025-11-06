@@ -69,15 +69,16 @@ public abstract class AbstractConsumerHandler<T> {
      * @param message 解析后的消息对象
      */
     public final void consume(MessageExtend<T> message) {
+        Boolean result = beforeConsume(message);
         try {
-            if (beforeConsume(message)) {
+            if (result) {
                 doConsume(message);
-                afterConsumeSuccess(message);
             }
         } catch (Throwable t) {
             afterConsumeFailure(message, t);
             throw t;
         }
+        afterConsumeSuccess(message);
     }
     /**
      * 真正消费前的前置钩子，默认打印日志。
