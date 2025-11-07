@@ -128,6 +128,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private IAutoIssueNotifyService autoIssueNotifyService;
+    
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
 
@@ -287,8 +288,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         SeckillVoucher seckillVoucher = seckillVoucherService.queryByVoucherId(voucherId);
         Long userId = UserHolder.getUser().getId();
         verifyUserLevel(seckillVoucher,userId);
-        //限流
-        //rateLimitHandler.execute(voucherId,userId);
+        // 限流统一在控制器层执行，避免重复计数与双重拦截
         long orderId = snowflakeIdGenerator.nextId();
         long traceId = snowflakeIdGenerator.nextId();
         // 执行lua脚本（方案A：单槽位Hash Tag键，不分片）

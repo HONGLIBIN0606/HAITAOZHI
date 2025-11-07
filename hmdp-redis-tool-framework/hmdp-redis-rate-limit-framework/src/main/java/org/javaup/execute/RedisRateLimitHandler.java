@@ -12,6 +12,7 @@ import org.javaup.redis.RedisKeyBuild;
 import org.javaup.ratelimit.extension.RateLimitContext;
 import org.javaup.ratelimit.extension.RateLimitEventListener;
 import org.javaup.ratelimit.extension.RateLimitPenaltyPolicy;
+import org.javaup.ratelimit.extension.RateLimitScene;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -46,8 +47,16 @@ public class RedisRateLimitHandler implements RateLimitHandler {
     }
 
     @Override
-    public void execute(Long voucherId, 
+    public void execute(Long voucherId,
                         Long userId) {
+        // 默认按下单场景处理，以兼容旧调用方
+        execute(voucherId, userId, RateLimitScene.SECKILL_ORDER);
+    }
+
+    @Override
+    public void execute(Long voucherId,
+                        Long userId,
+                        RateLimitScene scene) {
         String clientIp = resolveClientIp();
 
         if (isWhitelisted(userId, clientIp)) {
@@ -56,12 +65,12 @@ public class RedisRateLimitHandler implements RateLimitHandler {
 
         checkBans(voucherId, userId, clientIp);
 
-        int ipLimitWindowMillis = seckillRateLimitConfigProperties.getIpWindowMillis();
-        int ipLimitMaxAttempts = seckillRateLimitConfigProperties.getIpMaxAttempts();
-        int userLimitWindowMillis = seckillRateLimitConfigProperties.getUserWindowMillis();
-        int userLimitMaxAttempts = seckillRateLimitConfigProperties.getUserMaxAttempts();
+        int ipLimitWindowMillis = resolveIpWindow(scene);
+        int ipLimitMaxAttempts = resolveIpMaxAttempts(scene);
+        int userLimitWindowMillis = resolveUserWindow(scene);
+        int userLimitMaxAttempts = resolveUserMaxAttempts(scene);
 
-        boolean useSliding = Boolean.TRUE.equals(seckillRateLimitConfigProperties.getEnableSlidingWindow());
+        boolean useSliding = resolveSliding(scene);
         List<String> keys = buildRateLimitKeys(voucherId, userId, clientIp, useSliding);
         String[] args = buildArgs(ipLimitWindowMillis, ipLimitMaxAttempts, userLimitWindowMillis, userLimitMaxAttempts);
 
@@ -72,6 +81,40 @@ public class RedisRateLimitHandler implements RateLimitHandler {
         Integer result = executeLua(useSliding, keys, args);
         ctx.setResult(result);
         handleResult(ctx);
+    }
+    
+    private int resolveIpWindow(RateLimitScene scene) {
+        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
+                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
+        Integer v = ep != null ? ep.getIpWindowMillis() : null;
+        return v != null ? v : seckillRateLimitConfigProperties.getIpWindowMillis();
+    }
+    private int resolveIpMaxAttempts(RateLimitScene scene) {
+        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
+                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
+        Integer v = ep != null ? ep.getIpMaxAttempts() : null;
+        return v != null ? v : seckillRateLimitConfigProperties.getIpMaxAttempts();
+    }
+    private int resolveUserWindow(RateLimitScene scene) {
+        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
+                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
+        Integer v = ep != null ? ep.getUserWindowMillis() : null;
+        return v != null ? v : seckillRateLimitConfigProperties.getUserWindowMillis();
+    }
+    private int resolveUserMaxAttempts(RateLimitScene scene) {
+        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
+                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
+        Integer v = ep != null ? ep.getUserMaxAttempts() : null;
+        return v != null ? v : seckillRateLimitConfigProperties.getUserMaxAttempts();
+    }
+
+    private boolean resolveSliding(RateLimitScene scene) {
+        SeckillRateLimitConfigProperties.EndpointLimit ep = 
+                scene == RateLimitScene.ISSUE_TOKEN
+                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
+        Boolean v = ep != null ? ep.getEnableSlidingWindow() : null;
+        Boolean g = seckillRateLimitConfigProperties.getEnableSlidingWindow();
+        return Boolean.TRUE.equals(v != null ? v : g);
     }
     
     private String resolveClientIp(){
@@ -186,7 +229,11 @@ public class RedisRateLimitHandler implements RateLimitHandler {
     }
 
     private Integer executeLua(boolean useSliding, List<String> keys, String[] args) {
-        return useSliding ? slidingRateLimitOperate.execute(keys, args) : rateLimitOperate.execute(keys, args);
+        return useSliding 
+                ? 
+                slidingRateLimitOperate.execute(keys, args).intValue() 
+                : 
+                rateLimitOperate.execute(keys, args).intValue();
     }
 
     private void handleResult(RateLimitContext ctx) {

@@ -34,7 +34,7 @@ public class SlidingRateLimitOperate {
         }
     }
 
-    public Integer execute(List<String> keys, String[] args){
-        return (Integer)redisCache.getInstance().execute(redisScript, keys, args);
+    public Long execute(List<String> keys, String[] args){
+        return (Long)redisCache.getInstance().execute(redisScript, keys, args);
     }
 }

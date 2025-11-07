@@ -92,6 +92,10 @@ seckill:
       dedup:
         window:
           seconds: 300
+  access:
+    token:
+      enabled: false
+      ttl-seconds: 30
 
 management:
   endpoints:

@@ -35,9 +35,6 @@ public class SeckillVoucherRollBackOperate {
     
     public Integer execute(List<String> keys, String[] args){
         Object obj = redisCache.getInstance().execute(redisScript, keys, args);
-        if (obj == null) {
-            return null;
-        }
         // 兼容不同驱动/序列化下的返回类型
         if (obj instanceof Integer) {
             return (Integer) obj;

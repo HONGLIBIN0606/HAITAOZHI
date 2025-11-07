@@ -52,4 +52,24 @@ public class SeckillRateLimitConfigProperties implements Serializable {
 
     /** 用户封禁 TTL，单位：秒 */
     private Integer userBlockTtlSeconds = 300;
+
+    /** 发令牌接口的限流覆盖配置（为空则继承全局配置） */
+    private EndpointLimit issue = new EndpointLimit();
+
+    /** 下单接口的限流覆盖配置（为空则继承全局配置） */
+    private EndpointLimit seckill = new EndpointLimit();
+
+    @Data
+    public static class EndpointLimit implements Serializable {
+        /** IP限流窗口毫秒数（缺省时使用全局 ipWindowMillis） */
+        private Integer ipWindowMillis;
+        /** IP最大尝试次数（缺省时使用全局 ipMaxAttempts） */
+        private Integer ipMaxAttempts;
+        /** 用户限流窗口毫秒数（缺省时使用全局 userWindowMillis） */
+        private Integer userWindowMillis;
+        /** 用户最大尝试次数（缺省时使用全局 userMaxAttempts） */
+        private Integer userMaxAttempts;
+        /** 是否启用滑动窗口（缺省时使用全局 enableSlidingWindow） */
+        private Boolean enableSlidingWindow;
+    }
 }

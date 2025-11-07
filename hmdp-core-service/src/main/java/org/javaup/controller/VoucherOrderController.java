@@ -8,8 +8,14 @@ import org.javaup.dto.GetVoucherOrderByVoucherIdDto;
 import org.javaup.dto.GetVoucherOrderDto;
 import org.javaup.dto.Result;
 import org.javaup.service.IVoucherOrderService;
+import org.javaup.service.ISeckillAccessTokenService;
+import org.javaup.utils.UserHolder;
+import org.javaup.execute.RateLimitHandler;
+import org.javaup.ratelimit.extension.RateLimitScene;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,8 +35,32 @@ public class VoucherOrderController {
     @Resource
     private IVoucherOrderService voucherOrderService;
 
+    @Resource
+    private ISeckillAccessTokenService accessTokenService;
+
+    @Resource
+    private RateLimitHandler rateLimitHandler;
+
+    @GetMapping("/seckill/token/{id}")
+    public Result<String> issueSeckillAccessToken(@PathVariable("id") Long voucherId) {
+        Long userId = UserHolder.getUser().getId();
+        // 分层限流：在令牌发放前进行按IP与用户的速率限制
+        rateLimitHandler.execute(voucherId, userId, RateLimitScene.ISSUE_TOKEN);
+        String token = accessTokenService.issueAccessToken(voucherId, userId);
+        return Result.ok(token);
+    }
+
     @PostMapping("/seckill/{id}")
-    public Result<Long> seckillVoucher(@PathVariable("id") Long voucherId) {
+    public Result<Long> seckillVoucher(@PathVariable("id") Long voucherId,
+                                       @RequestParam(name = "accessToken", required = false) String accessToken) {
+        Long userId = UserHolder.getUser().getId();
+        // 分层限流：在令牌校验/下单前进行限流，防止过载
+        rateLimitHandler.execute(voucherId, userId, RateLimitScene.SECKILL_ORDER);
+        if (accessTokenService.isEnabled()) {
+            if (accessToken == null || !accessTokenService.validateAndConsume(voucherId, userId, accessToken)) {
+                return Result.fail("令牌校验失败或令牌已失效");
+            }
+        }
         return voucherOrderService.seckillVoucher(voucherId);
     }
     

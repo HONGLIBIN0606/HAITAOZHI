@@ -1,0 +1,37 @@
+package org.javaup.lua;
+
+import org.javaup.redis.RedisCache;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scripting.support.ResourceScriptSource;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Lua操作：校验并消费秒杀访问令牌
+ */
+public class SeckillAccessTokenOperate {
+
+    private final DefaultRedisScript<Long> script;
+    private final RedisCache redisCache;
+
+    public SeckillAccessTokenOperate(RedisCache redisCache) {
+        this.redisCache = redisCache;
+        this.script = new DefaultRedisScript<>();
+        this.script.setScriptSource(new ResourceScriptSource(new ClassPathResource("seckill_access_token.lua")));
+        this.script.setResultType(Long.class);
+    }
+
+    /**
+     * 校验并删除令牌
+     * @param key redis键
+     * @param expected 期望令牌值
+     * @return true 表示成功匹配并删除
+     */
+    public boolean validateAndConsume(String key, String expected) {
+        List<String> keys = Collections.singletonList(key);
+        Long ret = (Long)redisCache.getInstance().execute(script, keys, expected);
+        return ret == 1L;
+    }
+}
