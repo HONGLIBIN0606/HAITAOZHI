@@ -676,7 +676,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return true;
     }
 
-    // 构建Lua脚本所需的Redis key列表
+    /**
+     * 构建Lua脚本所需的Redis key列表
+     * */
     private List<String> buildSeckillKeys(final Long voucherId) {
         // 库存key
         String stockKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId).getRelKey();
@@ -688,7 +690,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return ListUtil.of(stockKey, userKey, traceKey);
     }
 
-    // 构建Lua脚本的入参数组（voucherId、userId、开始时间、结束时间、orderId、traceId、日志类型、TTL秒数）
+    /**
+     * 构建Lua脚本的入参数组（voucherId、userId、开始时间、结束时间、orderId、traceId、日志类型、TTL秒数）
+     * */
     private String[] buildSeckillArgs(final Long voucherId,
                                       final String userIdStr,
                                       final SeckillVoucher seckillVoucher,
@@ -716,7 +720,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return args;
     }
 
-    // 计算缓存TTL秒数：至结束时间的剩余秒数+1天，至少为1秒
+    /**
+     * 计算缓存TTL秒数：至结束时间的剩余秒数+1天，至少为1秒
+     * */
     private long computeTtlSeconds(final SeckillVoucher seckillVoucher) {
         // 距离结束时间的秒数
         long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucher.getEndTime()).getSeconds();
