@@ -10,8 +10,11 @@ import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
 import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
+import org.javaup.dto.VoucherSubscribeBatchDto;
+import org.javaup.dto.VoucherSubscribeDto;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.Voucher;
+import org.javaup.enums.SubscribeStatus;
 import org.javaup.handler.BloomFilterHandlerFactory;
 import org.javaup.mapper.VoucherMapper;
 import org.javaup.redis.RedisCache;
@@ -19,10 +22,12 @@ import org.javaup.redis.RedisKeyBuild;
 import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IVoucherService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
+import org.javaup.vo.GetSubscribeStatusVo;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -156,6 +161,30 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if (updatedVoucher || updatedSeckill) {
             seckillVoucherCacheInvalidationPublisher.publishInvalidate(voucherId, "update");
         }
+    }
+    
+    @Override
+    public void subscribe(final VoucherSubscribeDto voucherSubscribeDto) {
+        return;
+    }
+    
+    @Override
+    public void unsubscribe(final VoucherSubscribeDto voucherSubscribeDto) {
+        return;
+    }
+    
+    @Override
+    public Integer getSubscribeStatus(final VoucherSubscribeDto voucherSubscribeDto) {
+        return SubscribeStatus.UNSUBSCRIBED.getCode();
+    }
+    
+    @Override
+    public List<GetSubscribeStatusVo> getSubscribeStatusBatch(final VoucherSubscribeBatchDto voucherSubscribeBatchDto) {
+        List<GetSubscribeStatusVo> voucherSubscribeStatusVos = new ArrayList<>();
+        for (Long voucherId : voucherSubscribeBatchDto.getVoucherIdList()) {
+            voucherSubscribeStatusVos.add(new GetSubscribeStatusVo(voucherId,SubscribeStatus.UNSUBSCRIBED.getCode()));
+        }
+        return voucherSubscribeStatusVos;
     }
     
     public Long doAddSeckillVoucherV1(SeckillVoucherDto seckillVoucherDto) {

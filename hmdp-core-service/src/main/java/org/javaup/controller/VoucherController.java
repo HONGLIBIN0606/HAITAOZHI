@@ -7,8 +7,11 @@ import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
 import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
+import org.javaup.dto.VoucherSubscribeBatchDto;
+import org.javaup.dto.VoucherSubscribeDto;
 import org.javaup.entity.Voucher;
 import org.javaup.service.IVoucherService;
+import org.javaup.vo.GetSubscribeStatusVo;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -75,5 +78,27 @@ public class VoucherController {
     @GetMapping("/list/{shopId}")
     public Result<List<Voucher>> queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
        return voucherService.queryVoucherOfShop(shopId);
+    }
+    
+    @PostMapping("/subscribe")
+    public Result<Void> subscribe(@Valid @RequestBody VoucherSubscribeDto voucherSubscribeDto){
+        voucherService.subscribe(voucherSubscribeDto);
+        return Result.ok();
+    }
+    
+    @PostMapping("/unsubscribe")
+    public Result<Void> unsubscribe(@Valid @RequestBody VoucherSubscribeDto voucherSubscribeDto){
+        voucherService.unsubscribe(voucherSubscribeDto);
+        return Result.ok();
+    }
+    
+    @PostMapping("/get/subscribe/status")
+    public Result<Integer> getSubscribeStatus(@Valid @RequestBody VoucherSubscribeDto voucherSubscribeDto){
+        return Result.ok(voucherService.getSubscribeStatus(voucherSubscribeDto));
+    }
+    
+    @PostMapping("/get/subscribe/status/batch")
+    public Result<List<GetSubscribeStatusVo>> getSubscribeStatusBatch(@Valid @RequestBody VoucherSubscribeBatchDto voucherSubscribeBatchDto){
+        return Result.ok(voucherService.getSubscribeStatusBatch(voucherSubscribeBatchDto));
     }
 }

@@ -5,7 +5,10 @@ import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
 import org.javaup.dto.UpdateSeckillVoucherDto;
 import org.javaup.dto.VoucherDto;
+import org.javaup.dto.VoucherSubscribeBatchDto;
+import org.javaup.dto.VoucherSubscribeDto;
 import org.javaup.entity.Voucher;
+import org.javaup.vo.GetSubscribeStatusVo;
 
 import java.util.List;
 
@@ -26,4 +29,12 @@ public interface IVoucherService extends IService<Voucher> {
     Long addSeckillVoucher(SeckillVoucherDto seckillVoucherDto);
     
     void updateSeckillVoucher(UpdateSeckillVoucherDto updateSeckillVoucherDto);
+    
+    void subscribe(VoucherSubscribeDto voucherSubscribeDto);
+    
+    void unsubscribe(VoucherSubscribeDto voucherSubscribeDto);
+    
+    Integer getSubscribeStatus(VoucherSubscribeDto voucherSubscribeDto);
+    
+    List<GetSubscribeStatusVo> getSubscribeStatusBatch(VoucherSubscribeBatchDto voucherSubscribeBatchDto);
 }
