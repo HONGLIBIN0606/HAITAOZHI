@@ -135,18 +135,7 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         voucherOrderDto.setUserId(messageBody.getUserId());
         voucherOrderDto.setVoucherId(messageBody.getVoucherId());
         voucherOrderDto.setMessageId(message.getUuid());
-        try {
-            voucherOrderService.createVoucherOrderV2(voucherOrderDto);
-        }catch (DuplicateKeyException e){
-            long traceId = snowflakeIdGenerator.nextId();
-            redisVoucherData.rollbackRedisVoucherData(
-                    SeckillVoucherOrderOperate.NO,
-                    traceId,
-                    message.getMessageBody().getVoucherId(),
-                    message.getMessageBody().getUserId(),
-                    message.getMessageBody().getOrderId()
-            );
-        }
+        voucherOrderService.createVoucherOrderV2(voucherOrderDto);
     }
     
     /**
@@ -156,9 +145,13 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
     protected void afterConsumeFailure(final MessageExtend<SeckillVoucherMessage> message, 
                                        final Throwable throwable) {
         super.afterConsumeFailure(message, throwable);
+        SeckillVoucherOrderOperate seckillVoucherOrderOperate = SeckillVoucherOrderOperate.YES;
+        if (throwable instanceof DuplicateKeyException) {
+            seckillVoucherOrderOperate = SeckillVoucherOrderOperate.NO;
+        }
         long traceId = snowflakeIdGenerator.nextId();
         redisVoucherData.rollbackRedisVoucherData(
-                SeckillVoucherOrderOperate.YES,
+                seckillVoucherOrderOperate,
                 traceId,
                 message.getMessageBody().getVoucherId(),
                 message.getMessageBody().getUserId(),

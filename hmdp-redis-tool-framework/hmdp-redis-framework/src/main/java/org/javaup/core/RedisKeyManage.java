@@ -86,6 +86,21 @@ public enum RedisKeyManage {
     
     SECKILL_ROLLBACK_ALERT_DEDUP_KEY("seckill:rollback:alert:dedup:%s","秒杀券的id","value为1","k"),
     
+    /**
+     * 订阅：用户集合（带Hash Tag，voucherId在同槽位）
+     */
+    SECKILL_SUBSCRIBE_USER_TAG_KEY("seckill:subscribe:user:{%s}","秒杀券id（同槽位HashTag）","value为订阅用户集合","k"),
+    
+    /**
+     * 订阅：队列ZSET（带Hash Tag，voucherId在同槽位）
+     */
+    SECKILL_SUBSCRIBE_ZSET_TAG_KEY("seckill:subscribe:zset:{%s}","秒杀券id（同槽位HashTag）","value为订阅队列，member为用户id，score为加入时间戳","k"),
+    
+    /**
+     * 订阅：状态HASH（带Hash Tag，voucherId在同槽位）
+     */
+    SECKILL_SUBSCRIBE_STATUS_TAG_KEY("seckill:subscribe:status:{%s}","秒杀券id（同槽位HashTag）","value为用户订阅状态HASH，field为用户id，value为状态码","k"),
+    
     ;
 
     /**

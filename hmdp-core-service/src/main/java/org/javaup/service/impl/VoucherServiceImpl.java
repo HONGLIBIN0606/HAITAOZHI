@@ -23,12 +23,14 @@ import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IVoucherService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.vo.GetSubscribeStatusVo;
+import org.javaup.utils.UserHolder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.javaup.constant.Constant.BLOOM_FILTER_HANDLER_VOUCHER;
@@ -165,26 +167,171 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
     
     @Override
     public void subscribe(final VoucherSubscribeDto voucherSubscribeDto) {
-        return;
+        Long voucherId = voucherSubscribeDto.getVoucherId();
+        Long userId = UserHolder.getUser().getId();
+        String userIdStr = String.valueOf(userId);
+
+        Long ttlSeconds = redisCache.getExpire(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
+                TimeUnit.SECONDS
+        );
+        if (Objects.isNull(ttlSeconds) || ttlSeconds <= 0) {
+            SeckillVoucher sv = seckillVoucherService.lambdaQuery()
+                    .eq(SeckillVoucher::getVoucherId, voucherId)
+                    .one();
+            if (Objects.nonNull(sv) && Objects.nonNull(sv.getEndTime())) {
+                ttlSeconds = Math.max(
+                        LocalDateTimeUtil.between(LocalDateTimeUtil.now(), sv.getEndTime()).getSeconds(),
+                        1L
+                );
+            } else {
+                ttlSeconds = 3600L;
+            }
+        }
+
+        boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
+                userIdStr
+        ));
+
+        RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
+        if (purchased) {
+            redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUCCESS.getCode(), ttlSeconds, TimeUnit.SECONDS);
+            redisCache.expire(statusKey, ttlSeconds, TimeUnit.SECONDS);
+            return;
+        }
+
+        // 加入订阅集合（SET），幂等
+        RedisKeyBuild setKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_USER_TAG_KEY, voucherId);
+        Long added = redisCache.addForSet(setKey, userIdStr);
+        redisCache.expire(setKey, ttlSeconds, TimeUnit.SECONDS);
+
+        // 加入订阅队列（ZSET），仅首次加入时写入顺序分数
+        RedisKeyBuild zsetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY, voucherId);
+        if (Objects.nonNull(added) && added > 0) {
+            redisCache.addForSortedSet(zsetKey, userIdStr, (double) System.currentTimeMillis(), ttlSeconds, TimeUnit.SECONDS);
+        } else {
+            // 已存在则仅对齐TTL
+            redisCache.expire(zsetKey, ttlSeconds, TimeUnit.SECONDS);
+        }
+
+        // 更新订阅状态为 SUBSCRIBED（如已是 SUCCESS 则不降级）
+        Integer prev = redisCache.getForHash(statusKey, userIdStr, Integer.class);
+        if (!SubscribeStatus.SUCCESS.getCode().equals(prev)) {
+            redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUBSCRIBED.getCode(), ttlSeconds, TimeUnit.SECONDS);
+        }
+        redisCache.expire(statusKey, ttlSeconds, TimeUnit.SECONDS);
     }
     
     @Override
     public void unsubscribe(final VoucherSubscribeDto voucherSubscribeDto) {
-        return;
+        Long voucherId = voucherSubscribeDto.getVoucherId();
+        Long userId = UserHolder.getUser().getId();
+        String userIdStr = String.valueOf(userId);
+
+        RedisKeyBuild setKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_USER_TAG_KEY, voucherId);
+        RedisKeyBuild zsetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY, voucherId);
+        RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
+
+        // 从订阅集合与队列移除
+        redisCache.removeForSet(setKey, userIdStr);
+        redisCache.delForSortedSet(zsetKey, userIdStr);
+
+        // 已购则维持 SUCCESS，否则置为 UNSUBSCRIBED
+        boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
+                userIdStr
+        ));
+        Long ttlSeconds = redisCache.getExpire(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
+                TimeUnit.SECONDS
+        );
+        if (ttlSeconds == null || ttlSeconds <= 0) {
+            ttlSeconds = 3600L;
+        }
+        redisCache.putHash(
+                statusKey, 
+                userIdStr,
+                purchased ? SubscribeStatus.SUCCESS.getCode() : SubscribeStatus.UNSUBSCRIBED.getCode(),
+                ttlSeconds, TimeUnit.SECONDS);
+        redisCache.expire(statusKey, ttlSeconds, TimeUnit.SECONDS);
     }
     
     @Override
     public Integer getSubscribeStatus(final VoucherSubscribeDto voucherSubscribeDto) {
-        return SubscribeStatus.UNSUBSCRIBED.getCode();
+        Long voucherId = voucherSubscribeDto.getVoucherId();
+        Long userId = UserHolder.getUser().getId();
+        String userIdStr = String.valueOf(userId);
+
+        RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
+        Integer st = redisCache.getForHash(statusKey, userIdStr, Integer.class);
+        if (st != null) {
+            return st;
+        }
+
+        // 先判断是否已购
+        boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
+                userIdStr
+        ));
+        if (purchased) {
+            Long ttlSeconds = redisCache.getExpire(
+                    RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
+                    TimeUnit.SECONDS
+            );
+            if (ttlSeconds == null || ttlSeconds <= 0) {
+                ttlSeconds = 3600L;
+            }
+            redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUCCESS.getCode(), ttlSeconds, TimeUnit.SECONDS);
+            redisCache.expire(statusKey, ttlSeconds, TimeUnit.SECONDS);
+            return SubscribeStatus.SUCCESS.getCode();
+        }
+
+        // 判断是否在订阅集合
+        boolean inQueue = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_USER_TAG_KEY, voucherId),
+                userIdStr
+        ));
+        return inQueue ? SubscribeStatus.SUBSCRIBED.getCode() : SubscribeStatus.UNSUBSCRIBED.getCode();
     }
     
     @Override
     public List<GetSubscribeStatusVo> getSubscribeStatusBatch(final VoucherSubscribeBatchDto voucherSubscribeBatchDto) {
-        List<GetSubscribeStatusVo> voucherSubscribeStatusVos = new ArrayList<>();
+        Long userId = UserHolder.getUser().getId();
+        String userIdStr = String.valueOf(userId);
+        List<GetSubscribeStatusVo> res = new ArrayList<>();
         for (Long voucherId : voucherSubscribeBatchDto.getVoucherIdList()) {
-            voucherSubscribeStatusVos.add(new GetSubscribeStatusVo(voucherId,SubscribeStatus.UNSUBSCRIBED.getCode()));
+            // 优先使用HASH缓存
+            RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
+            Integer st = redisCache.getForHash(statusKey, userIdStr, Integer.class);
+            if (st != null) {
+                res.add(new GetSubscribeStatusVo(voucherId, st));
+                continue;
+            }
+            boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                    RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
+                    userIdStr
+            ));
+            if (purchased) {
+                Long ttlSeconds = redisCache.getExpire(
+                        RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
+                        TimeUnit.SECONDS
+                );
+                if (ttlSeconds == null || ttlSeconds <= 0) {
+                    ttlSeconds = 3600L;
+                }
+                redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUCCESS.getCode(), ttlSeconds, TimeUnit.SECONDS);
+                redisCache.expire(statusKey, ttlSeconds, TimeUnit.SECONDS);
+                res.add(new GetSubscribeStatusVo(voucherId, SubscribeStatus.SUCCESS.getCode()));
+                continue;
+            }
+            boolean inQueue = Boolean.TRUE.equals(redisCache.isMemberForSet(
+                    RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_USER_TAG_KEY, voucherId),
+                    userIdStr
+            ));
+            res.add(new GetSubscribeStatusVo(voucherId, inQueue ? SubscribeStatus.SUBSCRIBED.getCode() : SubscribeStatus.UNSUBSCRIBED.getCode()));
         }
-        return voucherSubscribeStatusVos;
+        return res;
     }
     
     public Long doAddSeckillVoucherV1(SeckillVoucherDto seckillVoucherDto) {

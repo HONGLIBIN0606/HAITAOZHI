@@ -54,6 +54,7 @@ import org.springframework.data.redis.connection.stream.StreamInfo;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.connection.stream.StreamReadOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -453,6 +454,16 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 60, 
                 TimeUnit.SECONDS
         );
+        // 订单创建成功后，清理该用户在订阅ZSET中的排队位置（避免后续重复分配）
+        try {
+            RedisKeyBuild subscribeZSetKey = RedisKeyBuild.createRedisKey(
+                    RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY,
+                    voucherOrderDto.getVoucherId()
+            );
+            redisCache.delForSortedSet(subscribeZSetKey, String.valueOf(userId));
+        } catch (Exception e) {
+            log.warn("清理订阅ZSET成员失败，voucherId={}, userId={}, err={}", voucherOrderDto.getVoucherId(), userId, e.getMessage());
+        }
         return true;
     }
     
@@ -510,13 +521,210 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     traceId,
                     voucherOrder.getVoucherId(),
                     voucherOrder.getUserId(),
-                    voucherOrder.getId());
+                    voucherOrder.getId()
+            );
+            // 回滚成功后，尝试将资格自动分配给订阅队列中最早的未购用户
+            try {
+                autoIssueVoucherToEarliestSubscriber(
+                        voucherOrder.getVoucherId(), 
+                        voucherOrder.getUserId()
+                );
+            } catch (Exception e) {
+                log.warn("自动发券失败，voucherId={}, err=\n{}", voucherOrder.getVoucherId(), e.getMessage());
+            }
         }
         return result;
     }
+    
+    /**
+     * 回滚后自动发券：挑选订阅ZSET中按加入时间最早的未购用户，执行Lua扣减并下发Kafka消息。
+     * 说明：
+     * - 不修改订阅集合与状态，成功下单后用户将出现在已购集合，状态查询会返回SUCCESS；
+     * - 为避免重复，筛选时排除已购用户与当前取消用户；
+     * - 采用范围批量读取前N条并按score最小选取候选，避免由于Set去序导致的顺序丢失。
+     */
+    private boolean autoIssueVoucherToEarliestSubscriber(final Long voucherId, final Long excludeUserId) {
+        // 查询券信息，用于校验和TTL计算
+        SeckillVoucher seckillVoucher = seckillVoucherService.queryByVoucherId(voucherId);
+        // 校验券数据完整性（开始/结束时间必须存在）
+        if (Objects.isNull(seckillVoucher) 
+                || 
+                Objects.isNull(seckillVoucher.getBeginTime()) 
+                ||
+                Objects.isNull(seckillVoucher.getEndTime())) {
+            // 数据不完整时终止自动发券
+            return false;
+        }
+        // 在订阅ZSET中查找最早且未购的候选用户（排除本次取消用户）
+        String candidateUserIdStr = findEarliestCandidate(voucherId, excludeUserId);
+        // 没有候选用户则结束流程
+        if (StrUtil.isBlank(candidateUserIdStr)) {
+            return false;
+        }
+        // 执行扣减与消息下发，并在成功后移除候选的ZSET位置
+        return issueToCandidate(voucherId, candidateUserIdStr, seckillVoucher);
+    }
 
-   /*
+    /**
+     * 按分数升序使用 LIMIT 递增分页，找出第一个符合条件的候选用户
+     * 条件：排除当前取消用户，且未在已购集合中
+     * */
+    private String findEarliestCandidate(final Long voucherId, final Long excludeUserId) {
+        // 订阅ZSET key（按加入时间的score存储）
+        RedisKeyBuild subscribeZSetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY, voucherId);
+        // 已购用户集合 key
+        RedisKeyBuild purchasedSetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId);
+        // 待排除的取消用户id字符串
+        String excludeStr = String.valueOf(excludeUserId);
+        // 每页仅取一个成员
+        final long pageCount = 1L;
+        // 从最早的成员开始递增偏移
+        long offset = 0L;
+        // 循环分页，直到找到符合者或没有更多成员
+        while (true) {
+            // 读取按score（加入时间）升序的一个成员（带score）
+            Set<ZSetOperations.TypedTuple<String>> page = redisCache.rangeByScoreWithScoreForSortedSet(
+                    subscribeZSetKey,
+                    Double.NEGATIVE_INFINITY,
+                    Double.POSITIVE_INFINITY,
+                    offset,
+                    pageCount,
+                    String.class
+            );
+            // 没有更多成员，返回null
+            if (CollectionUtil.isEmpty(page)) {
+                return null;
+            }
+            // 取出当前页的唯一成员
+            ZSetOperations.TypedTuple<String> tuple = page.iterator().next();
+            // 无效项，跳过并递增偏移
+            if (Objects.isNull(tuple) || Objects.isNull(tuple.getValue())) {
+                offset++;
+                continue;
+            }
+            // 候选用户id字符串
+            String uidStr = tuple.getValue();
+            // 空白id，跳过并递增偏移
+            if (StrUtil.isBlank(uidStr)) {
+                offset++;
+                continue;
+            }
+            // 排除本次取消的用户
+            if (Objects.equals(uidStr, excludeStr)) {
+                offset++;
+                continue;
+            }
+            // 判断是否已购（true 则跳过）
+            Boolean purchased = redisCache.isMemberForSet(purchasedSetKey, uidStr);
+            if (BooleanUtil.isTrue(purchased)) {
+                offset++;
+                continue;
+            }
+            // 找到第一个符合条件的用户，直接返回
+            return uidStr;
+        }
+    }
 
+    /**
+     * 对候选用户执行Lua扣减与消息下发，并从订阅ZSET移除（成功后）
+     * */
+    private boolean issueToCandidate(final Long voucherId, final String candidateUserIdStr, final SeckillVoucher seckillVoucher) {
+        // 将候选用户id转换为Long
+        Long candidateUserId = Long.valueOf(candidateUserIdStr);
+        // 校验人群规则（不满足则跳过）
+        try {
+            verifyUserLevel(seckillVoucher, candidateUserId);
+        } catch (Exception e) {
+            // 校验失败记录日志并返回
+            log.info("候选用户不满足人群规则，自动发券跳过。voucherId={}, userId={}", voucherId, candidateUserId);
+            return false;
+        }
+        // 构建Lua脚本keys（库存、已购集合、trace日志集合）
+        List<String> keys = buildSeckillKeys(voucherId);
+        // 生成订单id
+        long orderId = snowflakeIdGenerator.nextId();
+        // 生成traceId
+        long traceId = snowflakeIdGenerator.nextId();
+        // 构建Lua入参数组
+        String[] args = buildSeckillArgs(voucherId, candidateUserIdStr, seckillVoucher, orderId, traceId);
+        // 执行秒杀扣减Lua脚本
+        SeckillVoucherDomain domain = seckillVoucherOperate.execute(keys, args);
+        // 校验Lua执行结果是否成功
+        if (!Objects.equals(domain.getCode(), BaseCode.SUCCESS.getCode())) {
+            // 扣减失败记录日志并返回
+            log.info("自动发券Lua扣减失败，code={}, voucherId={}, userId={}", domain.getCode(), voucherId, candidateUserId);
+            return false;
+        }
+        // 构造Kafka消息体
+        SeckillVoucherMessage message = new SeckillVoucherMessage(
+                candidateUserId,
+                voucherId,
+                orderId,
+                traceId,
+                domain.getBeforeQty(),
+                domain.getDeductQty(),
+                domain.getAfterQty()
+        );
+        // 发送Kafka消息（失败将由生产者回调触发Redis回滚）
+        seckillVoucherProducer.sendPayload(
+                SpringUtil.getPrefixDistinctionName() + "-" + SECKILL_VOUCHER_TOPIC,
+                message
+        );
+        // 注意：不在此处移除订阅ZSET成员，也不记录“成功”日志。
+        // 订阅ZSET的移除应在消息消费成功并创建订单后进行，避免发送或消费失败导致丢号。
+        // 返回成功
+        return true;
+    }
+
+    // 构建Lua脚本所需的Redis key列表
+    private List<String> buildSeckillKeys(final Long voucherId) {
+        // 库存key
+        String stockKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId).getRelKey();
+        // 已购用户集合key
+        String userKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId).getRelKey();
+        // trace日志集合key
+        String traceKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_TRACE_LOG_TAG_KEY, voucherId).getRelKey();
+        // 返回keys列表
+        return ListUtil.of(stockKey, userKey, traceKey);
+    }
+
+    // 构建Lua脚本的入参数组（voucherId、userId、开始时间、结束时间、orderId、traceId、日志类型、TTL秒数）
+    private String[] buildSeckillArgs(final Long voucherId,
+                                      final String userIdStr,
+                                      final SeckillVoucher seckillVoucher,
+                                      final long orderId,
+                                      final long traceId) {
+        // 初始化数组长度为8
+        String[] args = new String[8];
+        // 写入voucherId
+        args[0] = voucherId.toString();
+        // 写入userId
+        args[1] = userIdStr;
+        // 写入券开始时间（毫秒）
+        args[2] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getBeginTime()));
+        // 写入券结束时间（毫秒）
+        args[3] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getEndTime()));
+        // 写入订单id
+        args[4] = String.valueOf(orderId);
+        // 写入traceId
+        args[5] = String.valueOf(traceId);
+        // 写入扣减日志类型
+        args[6] = String.valueOf(LogType.DEDUCT.getCode());
+        // 计算TTL秒数并写入
+        args[7] = String.valueOf(computeTtlSeconds(seckillVoucher));
+        // 返回入参数组
+        return args;
+    }
+
+    // 计算缓存TTL秒数：至结束时间的剩余秒数+1天，至少为1秒
+    private long computeTtlSeconds(final SeckillVoucher seckillVoucher) {
+        // 距离结束时间的秒数
+        long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucher.getEndTime()).getSeconds();
+        // 叠加额外一天，并保证最小值为1秒
+        return Math.max(1L, secondsUntilEnd + Duration.ofDays(1).getSeconds());
+    }
+
+    /*
     private BlockingQueue<VoucherOrder> orderTasks = new ArrayBlockingQueue<>(1024 * 1024);
     private class VoucherOrderHandler implements Runnable{
         @Override
@@ -646,4 +854,5 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.ok(orderId);
         }
     }*/
+
 }
