@@ -13,8 +13,10 @@ import org.javaup.dto.Result;
 import org.javaup.dto.UserDTO;
 import org.javaup.entity.User;
 import org.javaup.entity.UserInfo;
+import org.javaup.entity.UserPhone;
 import org.javaup.mapper.UserMapper;
 import org.javaup.service.IUserInfoService;
+import org.javaup.service.IUserPhoneService;
 import org.javaup.service.IUserService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.utils.RegexUtils;
@@ -58,6 +60,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     
     @Resource
     private IUserInfoService userInfoService;
+    
+    @Resource
+    private IUserPhoneService userPhoneService;
 
     @Override
     public Result<String> sendCode(String phone, HttpSession session) {
@@ -95,13 +100,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return Result.fail("验证码错误");
         }
 
-        // 4.一致，根据手机号查询用户 select * from tb_user where phone = ?
-        User user = query().eq("phone", phone).one();
+        // 4.根据手机号查询用户
+        UserPhone userPhone = userPhoneService.lambdaQuery().eq(UserPhone::getPhone, phone).one();
 
+        User user = null;
         // 5.判断用户是否存在
-        if (user == null) {
+        if (userPhone == null) {
             // 6.不存在，创建新用户并保存
             user = createUserWithPhone(phone);
+        }else {
+            user = lambdaQuery().eq(User::getPhone, userPhone.getPhone()).one();
         }
 
         // 7.保存用户信息到 redis中
@@ -184,7 +192,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         return Result.ok(count);
     }
-
+    
     private User createUserWithPhone(String phone) {
         // 1.创建用户
         User user = new User();
@@ -199,6 +207,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         userInfo.setUserId(user.getId());
         userInfo.setLevel(1);
         userInfoService.save(userInfo);
+        // 4.保存用户手机信息
+        UserPhone userPhone = new UserPhone();
+        userPhone.setId(snowflakeIdGenerator.nextId());
+        userPhone.setUserId(user.getId());
+        userPhone.setPhone(phone);
+        userPhoneService.save(userPhone);
         return user;
     }
 }

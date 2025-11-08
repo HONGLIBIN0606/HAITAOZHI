@@ -11,20 +11,20 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 秒杀优惠券表，与优惠券是一对一关系
+ * 
  * </p>
  *
  * @author 虎哥
- * @since 2022-01-04
+ * @since 2021-12-22
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("tb_seckill_voucher")
-public class SeckillVoucher implements Serializable {
+@TableName("tb_user_phone")
+public class UserPhone implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
+
     /**
      * 主键
      */
@@ -32,45 +32,21 @@ public class SeckillVoucher implements Serializable {
     private Long id;
     
     /**
-     * 关联的优惠券的id
+     * 用户id
      */
-    private Long voucherId;
+    private Long userId;
+
+    /**
+     * 手机号码
+     */
+    private String phone;
     
-    /**
-     * 初始化库存
-     */
-    private Integer initStock;
-
-    /**
-     * 库存
-     */
-    private Integer stock;
-
-    /**
-     * 允许参与的会员等级，逗号分隔，如："1,2,3"
-     */
-    private String allowedLevels;
-
-    /**
-     * 最低会员等级
-     */
-    private Integer minLevel;
-
     /**
      * 创建时间
      */
     private LocalDateTime createTime;
-
-    /**
-     * 生效时间
-     */
-    private LocalDateTime beginTime;
-
-    /**
-     * 失效时间
-     */
-    private LocalDateTime endTime;
-
+    
+    
     /**
      * 更新时间
      */

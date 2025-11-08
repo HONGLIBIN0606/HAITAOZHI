@@ -3,12 +3,11 @@ import axios from 'axios'
 import JSONbig from 'json-bigint'
 import { useUserStore } from '@/stores'
 import router from '@/router'
-// const baseURL = 'http://localhost:8081'
 const baseURL = '/api'
 const instance = axios.create({
   // TODO 1.设置基础地址和超时时间
   baseURL,
-  timeout: 2000,
+  timeout: 10000,
   // 使用 json-bigint 将超过安全整数范围的数以字符串存储，避免精度丢失
   transformResponse: [
     function (data) {

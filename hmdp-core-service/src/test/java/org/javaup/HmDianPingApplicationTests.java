@@ -1,5 +1,6 @@
 package org.javaup;
 
+import jakarta.annotation.Resource;
 import org.javaup.entity.Shop;
 import org.javaup.service.impl.ShopServiceImpl;
 import org.javaup.utils.CacheClient;
@@ -10,7 +11,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import javax.annotation.Resource;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

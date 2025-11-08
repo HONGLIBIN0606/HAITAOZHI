@@ -142,6 +142,10 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             seckillUpdate.set(SeckillVoucher::getEndTime, updateSeckillVoucherDto.getEndTime());
             updatedSeckill = true;
         }
+        if (updateSeckillVoucherDto.getInitStock() != null) {
+            seckillUpdate.set(SeckillVoucher::getInitStock, updateSeckillVoucherDto.getInitStock());
+            updatedSeckill = true;
+        }
         if (updateSeckillVoucherDto.getStock() != null) {
             seckillUpdate.set(SeckillVoucher::getStock, updateSeckillVoucherDto.getStock());
             updatedSeckill = true;
@@ -373,6 +377,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         SeckillVoucher seckillVoucher = new SeckillVoucher();
         seckillVoucher.setId(snowflakeIdGenerator.nextId());
         seckillVoucher.setVoucherId(voucherId);
+        seckillVoucher.setInitStock(seckillVoucherDto.getStock());
         seckillVoucher.setStock(seckillVoucherDto.getStock());
         seckillVoucher.setBeginTime(seckillVoucherDto.getBeginTime());
         seckillVoucher.setEndTime(seckillVoucherDto.getEndTime());

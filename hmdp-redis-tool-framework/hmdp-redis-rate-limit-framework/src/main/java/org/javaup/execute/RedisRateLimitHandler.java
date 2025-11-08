@@ -84,35 +84,104 @@ public class RedisRateLimitHandler implements RateLimitHandler {
     }
     
     private int resolveIpWindow(RateLimitScene scene) {
-        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
-                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
-        Integer v = ep != null ? ep.getIpWindowMillis() : null;
-        return v != null ? v : seckillRateLimitConfigProperties.getIpWindowMillis();
+        SeckillRateLimitConfigProperties.EndpointLimit ep = 
+                scene == RateLimitScene.ISSUE_TOKEN 
+                        ? 
+                        seckillRateLimitConfigProperties.getIssue() 
+                        : 
+                        seckillRateLimitConfigProperties.getSeckill();
+        
+        Integer v = 
+                ep != null
+                        ? 
+                        ep.getIpWindowMillis() 
+                        : 
+                        null;
+        
+        return v != null 
+                ? 
+                v 
+                : 
+                seckillRateLimitConfigProperties.getIpWindowMillis();
     }
     private int resolveIpMaxAttempts(RateLimitScene scene) {
-        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
-                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
-        Integer v = ep != null ? ep.getIpMaxAttempts() : null;
-        return v != null ? v : seckillRateLimitConfigProperties.getIpMaxAttempts();
+        SeckillRateLimitConfigProperties.EndpointLimit ep = 
+                scene == RateLimitScene.ISSUE_TOKEN 
+                        ? 
+                        seckillRateLimitConfigProperties.getIssue() 
+                        : 
+                        seckillRateLimitConfigProperties.getSeckill();
+        
+        Integer v = 
+                ep != null 
+                        ? 
+                        ep.getIpMaxAttempts() 
+                        : 
+                        null;
+        return v != null 
+                ? 
+                v 
+                : 
+                seckillRateLimitConfigProperties.getIpMaxAttempts();
     }
     private int resolveUserWindow(RateLimitScene scene) {
-        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
-                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
-        Integer v = ep != null ? ep.getUserWindowMillis() : null;
-        return v != null ? v : seckillRateLimitConfigProperties.getUserWindowMillis();
+        SeckillRateLimitConfigProperties.EndpointLimit ep = 
+                scene == RateLimitScene.ISSUE_TOKEN 
+                        ? 
+                        seckillRateLimitConfigProperties.getIssue() 
+                        : 
+                        seckillRateLimitConfigProperties.getSeckill();
+        
+        Integer v = 
+                ep != null 
+                        ? 
+                        ep.getUserWindowMillis() 
+                        : 
+                        null;
+        
+        return v != null 
+                ? 
+                v 
+                : 
+                seckillRateLimitConfigProperties.getUserWindowMillis();
     }
     private int resolveUserMaxAttempts(RateLimitScene scene) {
-        SeckillRateLimitConfigProperties.EndpointLimit ep = scene == RateLimitScene.ISSUE_TOKEN
-                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
-        Integer v = ep != null ? ep.getUserMaxAttempts() : null;
-        return v != null ? v : seckillRateLimitConfigProperties.getUserMaxAttempts();
+        SeckillRateLimitConfigProperties.EndpointLimit ep = 
+                scene == RateLimitScene.ISSUE_TOKEN 
+                        ? 
+                        seckillRateLimitConfigProperties.getIssue() 
+                        : 
+                        seckillRateLimitConfigProperties.getSeckill();
+        
+        Integer v = 
+                ep != null 
+                        ? 
+                        ep.getUserMaxAttempts() 
+                        : 
+                        null;
+        
+        return v != null 
+                ? 
+                v 
+                : 
+                seckillRateLimitConfigProperties.getUserMaxAttempts();
     }
 
     private boolean resolveSliding(RateLimitScene scene) {
         SeckillRateLimitConfigProperties.EndpointLimit ep = 
-                scene == RateLimitScene.ISSUE_TOKEN
-                ? seckillRateLimitConfigProperties.getIssue() : seckillRateLimitConfigProperties.getSeckill();
-        Boolean v = ep != null ? ep.getEnableSlidingWindow() : null;
+                scene == RateLimitScene.ISSUE_TOKEN 
+                        ? 
+                        seckillRateLimitConfigProperties.getIssue() 
+                        : 
+                        seckillRateLimitConfigProperties.getSeckill();
+        
+        Boolean v = 
+                ep != null 
+                        ? 
+                        ep.getEnableSlidingWindow() 
+                        : 
+                        null;
+        
         Boolean g = seckillRateLimitConfigProperties.getEnableSlidingWindow();
         return Boolean.TRUE.equals(v != null ? v : g);
     }

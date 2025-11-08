@@ -68,6 +68,11 @@ public class UpdateSeckillVoucherDto implements Serializable {
     private Integer status;
     
     /**
+     * 初始化的库存
+     */
+    private Integer initStock;
+    
+    /**
      * 库存
      */
     private Integer stock;
