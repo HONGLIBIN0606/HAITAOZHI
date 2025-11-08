@@ -26,7 +26,7 @@ public class SeckillVoucherDataRenewalInit {
         //更新优惠券的开始时间和结束时间
         updateBeginAndEndTime();
         //将库存数量恢复
-        renewalStock();
+        //renewalStock();
     }
     
     public void updateBeginAndEndTime(){

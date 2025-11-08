@@ -75,9 +75,9 @@ public class UserController {
     }
 
     @GetMapping("/info/{id}")
-    public Result<UserInfo> info(@PathVariable("id") Long userId){
+    public Result<UserInfo> info(@PathVariable("id") String userId){
         // 查询详情
-        UserInfo info = userInfoService.getById(userId);
+        UserInfo info = userInfoService.getById(Long.parseLong(userId));
         if (info == null) {
             // 没有详情，应该是第一次查看详情
             return Result.ok();

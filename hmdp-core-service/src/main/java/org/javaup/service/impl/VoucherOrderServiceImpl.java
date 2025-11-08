@@ -537,6 +537,11 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     voucherOrder.getUserId(),
                     voucherOrder.getId()
             );
+            // 将自己移除订阅队列
+            redisCache.delForHash(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, 
+                    cancelVoucherOrderDto.getVoucherId()),
+                    String.valueOf(voucherOrder.getUserId()));
+            
             // 回滚成功后，尝试将资格自动分配给订阅队列中最早的未购用户
             try {
                 autoIssueVoucherToEarliestSubscriber(

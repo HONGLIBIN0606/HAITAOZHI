@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, ArrowRight, Location, Timer } from '@element-plus/icons-vue'
 import { ElLoading } from 'element-plus'
 import { getShopById } from '@/api/shop'
-import { getVoucherList, seckillVoucher, getSeckillOrderId, getVoucherOrderIdByVoucherId, cancelVoucherOrder, subscribeVoucher, unsubscribeVoucher, getSubscribeStatusBatch } from '@/api/voucher'
+import { getVoucherList, issueSeckillAccessToken, seckillVoucher, getSeckillOrderId, getVoucherOrderIdByVoucherId, cancelVoucherOrder, subscribeVoucher, unsubscribeVoucher, getSubscribeStatusBatch } from '@/api/voucher'
 import { useUserStore } from '@/stores'
 
 const router = useRouter()
@@ -169,7 +169,7 @@ const isEnd = (v) => {
   return new Date(v.endTime).getTime() < new Date().getTime()
 }
 
-// 秒杀抢购
+// 秒杀抢购（先获取令牌，再携带令牌下单）
 const seckill = async (v) => {
   if (!userStore.token) {
     ElMessage.error('请先登录')
@@ -214,7 +214,15 @@ const seckill = async (v) => {
       background: 'rgba(0,0,0,0.35)',
       customClass: 'seckill-overlay'
     })
-    const res = await seckillVoucher(v.id)
+    // 1）先获取访问令牌
+    const tokenRes = await issueSeckillAccessToken(v.id)
+    if (!tokenRes?.success || !tokenRes?.data) {
+      ElMessage.error(tokenRes?.errorMsg || '令牌获取失败，请稍后重试')
+      return
+    }
+    const accessToken = String(tokenRes.data)
+    // 2）携带令牌发起下单
+    const res = await seckillVoucher(v.id, accessToken)
     // 仅在秒杀接口返回成功时才进行轮询确认订单
     if (res && res.success) {
       const order = await pollSeckillOrder(String(res.data), { delay: 800, timeoutMs: 11000 })

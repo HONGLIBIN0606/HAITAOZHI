@@ -1,6 +1,7 @@
 package org.javaup.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.javaup.redis.RedisCache;
 import org.javaup.redis.RedisKeyBuild;
 import org.javaup.core.RedisKeyManage;
@@ -14,6 +15,7 @@ import jakarta.annotation.Resource;
 import jakarta.annotation.PostConstruct;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 public class SeckillAccessTokenServiceImpl implements ISeckillAccessTokenService {
 
@@ -58,6 +60,7 @@ public class SeckillAccessTokenServiceImpl implements ISeckillAccessTokenService
             return existing != null ? existing : token;
         }
         safeInc("seckill_access_token_issue_success", "component", "service_impl");
+        log.info("获取到令牌成功！令牌：{}", token);
         return token;
     }
 

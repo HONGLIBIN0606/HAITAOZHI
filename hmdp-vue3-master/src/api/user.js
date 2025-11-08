@@ -25,5 +25,4 @@ export const getUser = (id) => request.get(id ? `/user/${id}` : '/user/me')
 // 用户：获取当前登录用户博客
 export const getUserBlog = () => request.get('/blog/of/me')
 // 用户：获取用户详情
-export const getUserInfo = (id) =>
-  request.get('/user/info', null, { params: { id } })
+export const getUserInfo = (id) => request.get(`/user/info/${id}`)
