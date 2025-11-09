@@ -5,6 +5,7 @@ import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.javaup.cache.SeckillVoucherCacheInvalidationPublisher;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.dto.Result;
@@ -49,6 +50,7 @@ import static org.javaup.utils.RedisConstants.SECKILL_STOCK_KEY;
  * @description: 优惠券 接口实现
  * @author: 阿星不是程序员
  **/
+@Slf4j
 @Service
 public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {
 
@@ -187,9 +189,9 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         if (newStock < 0 ) {
             throw new HmdpFrameException(BaseCode.AFTER_SECKILL_VOUCHER_REMAIN_STOCK_NOT_NEGATIVE_NUMBER);
         }
-        Integer stockUpdateType = StockUpdateType.INCREASE.getCode();
+        StockUpdateType stockUpdateType = StockUpdateType.INCREASE;
         if (changeStock < 0) {
-            stockUpdateType = StockUpdateType.DECREASE.getCode();
+            stockUpdateType = StockUpdateType.DECREASE;
         }
         seckillVoucherService.lambdaUpdate()
                 .set(SeckillVoucher::getStock, newStock)
@@ -198,18 +200,26 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 .update();
         String oldRedisStockStr = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, 
                 updateSeckillVoucherDto.getVoucherId()), String.class);
+        Integer newRedisStock = null;
         if (StrUtil.isBlank(oldRedisStockStr)) {
             redisCache.set(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY,
                     updateSeckillVoucherDto.getVoucherId()),String.valueOf(newInitStock));
         }else {
             int oldRedisStock = Integer.parseInt(oldRedisStockStr);
-            int newRedisStock = oldRedisStock + changeStock;
+            newRedisStock = oldRedisStock + changeStock;
             if (newRedisStock < 0 ) {
                 throw new HmdpFrameException(BaseCode.AFTER_SECKILL_VOUCHER_REMAIN_STOCK_NOT_NEGATIVE_NUMBER);
             }
             redisCache.set(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY,
                     updateSeckillVoucherDto.getVoucherId()),String.valueOf(newRedisStock));
         }
+        log.info("修改库存成功！修改库存类型：{},修改前：数据库初始库存：{},redis旧库存：{},修改后：数据库初始库存：{},redis新库存：{}",
+                stockUpdateType.getMsg(),
+                oldInitStock,
+                StrUtil.isBlank(oldRedisStockStr) ? null : oldRedisStockStr,
+                newInitStock,
+                newRedisStock
+                );
     }
     
     @Override
