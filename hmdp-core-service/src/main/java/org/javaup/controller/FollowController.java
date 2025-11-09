@@ -11,12 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 虎哥
- */
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: 点赞api
+ * @author: 阿星不是程序员
+ **/
 @RestController
 @RequestMapping("/follow")
 public class FollowController {

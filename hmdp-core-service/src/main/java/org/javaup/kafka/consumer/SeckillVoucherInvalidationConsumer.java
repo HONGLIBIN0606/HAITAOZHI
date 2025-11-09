@@ -21,23 +21,24 @@ import java.util.Objects;
 import static org.javaup.constant.Constant.SECKILL_VOUCHER_CACHE_INVALIDATION_TOPIC;
 import static org.javaup.constant.Constant.SPRING_INJECT_PREFIX_DISTINCTION_NAME;
 
-
 /**
- * Kafka 消费者：接收“秒杀券缓存失效”广播并执行本地/Redis缓存清理。
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Kafka 消费者：接收“秒杀券缓存失效”广播并执行本地/Redis缓存清理。
  * 负责：
  * 1) 失效本地缓存，缩短不一致窗口；
  * 2) 幂等删除 Redis 的券详情、库存、空值键；
  * 3) 记录结构化日志，异常场景打印警告。
- */
+ * @author: 阿星不是程序员
+ **/
 @Slf4j
 @Component
 public class SeckillVoucherInvalidationConsumer extends AbstractConsumerHandler<SeckillVoucherInvalidationMessage> {
 
-    // 本地缓存：用于当前实例的快速读取
+
     @Resource
     private SeckillVoucherLocalCache seckillVoucherLocalCache;
 
-    // Redis 缓存：用于跨实例共享的券详情与库存
+
     @Resource
     private RedisCache redisCache;
 

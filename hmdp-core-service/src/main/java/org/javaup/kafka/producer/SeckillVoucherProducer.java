@@ -13,13 +13,14 @@ import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-
 /**
- * Kafka 生产者：发送秒杀券订单消息。
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Kafka 生产者：发送秒杀券订单消息。
  * 特性：
  * - 在消息发送失败时，通过回调生成 traceId 并触发 Redis 回滚，
- *   保证库存与用户集合在失败场景下及时恢复一致性。
- */
+ * - 保证库存与用户集合在失败场景下及时恢复一致性。
+ * @author: 阿星不是程序员
+ **/
 @Slf4j
 @Component
 public class SeckillVoucherProducer extends AbstractProducerHandler<MessageExtend<SeckillVoucherMessage>> {

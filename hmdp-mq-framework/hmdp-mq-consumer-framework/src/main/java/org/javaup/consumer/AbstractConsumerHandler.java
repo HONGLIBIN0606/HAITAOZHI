@@ -11,9 +11,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
- * Kafka 消费者抽象基类。
- *
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Kafka 消费者抽象基类。
  * <p>统一将消息值（JSON 字符串）转换为 {@link MessageExtend}，并提供消费成功/失败的扩展钩子。
  * 子类只需实现 {@link #doConsume(MessageExtend)} 并在方法上使用 {@code @KafkaListener} 注解，
  * 然后在监听方法中调用 {@link #consumeRaw(String, Map)} 或 {@link #consume(MessageExtend)} 即可。</p>
@@ -27,9 +28,9 @@ import java.util.Map;
  * }
  * }
  * </pre>
- *
+ * @author: 阿星不是程序员
  * @param <T> 业务载荷类型
- */
+ **/
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractConsumerHandler<T> {

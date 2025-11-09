@@ -21,8 +21,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 统一封装：按IP与用户限流 + 调用Lua脚本扣减与记录
- */
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: 限流执行 接口实现，IP与用户限流
+ * @author: 阿星不是程序员
+ **/
 public class RedisRateLimitHandler implements RateLimitHandler {
 
     private final SeckillRateLimitConfigProperties seckillRateLimitConfigProperties;

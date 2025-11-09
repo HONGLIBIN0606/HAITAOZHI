@@ -18,17 +18,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-@Slf4j
-@RequiredArgsConstructor
+
 /**
- * Kafka 消息发送抽象处理器。
- *
- * <p>封装了基于 {@link KafkaTemplate} 的发送能力，统一对消息进行 {@link MessageExtend} 包装，
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Kafka 消息发送抽象处理器。
+ * <p>
+ * 封装了基于 {@link KafkaTemplate} 的发送能力，统一对消息进行 {@link MessageExtend} 包装，
  * 并提供成功与失败的扩展钩子方法（{@link #afterSendSuccess(SendResult)}、{@link #afterSendFailure(String, MessageExtend, Throwable)}）。
- * 同时提供多种便捷发送方式：直接传入业务载荷、携带 key 与 headers、批量发送、阻塞发送、以及发送到 DLQ。</p>
- *
+ * 同时提供多种便捷发送方式：直接传入业务载荷、携带 key 与 headers、批量发送、阻塞发送、以及发送到 DLQ。
+ * </p>
+ * @author: 阿星不是程序员
  * @param <M> 实际发送的消息类型，必须是 {@link MessageExtend} 的子类型（载荷类型可不固定）
  */
+@Slf4j
+@RequiredArgsConstructor
 public abstract class AbstractProducerHandler<M extends MessageExtend<?>> {
 
     /**

@@ -18,15 +18,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-
 /**
- * Kafka 生产者：广播“秒杀券缓存失效”消息到所有实例。
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Kafka 生产者：广播“秒杀券缓存失效”消息到所有实例。
  * 负责：
  * 1) 发送失败时结构化日志与指标记录；
  * 2) 退避重试（通过 Header 记录重试次数，避免无限递归）；
  * 3) 超过重试阈值后，投递到 DLQ 供后续补偿；
  * 4) 成功后记录成功指标，若为 DLQ 重放则额外审计日志。
- */
+ * @author: 阿星不是程序员
+ **/
 @Slf4j
 @Component
 public class SeckillVoucherInvalidationProducer extends AbstractProducerHandler<MessageExtend<SeckillVoucherInvalidationMessage>> {

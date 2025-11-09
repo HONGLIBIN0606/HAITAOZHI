@@ -4,13 +4,10 @@ import org.javaup.entity.UserInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
- * <p>
- *  Mapper 接口
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-24
- */
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: 用户信息 Mapper
+ * @author: 阿星不是程序员
+ **/
 public interface UserInfoMapper extends BaseMapper<UserInfo> {
 
 }

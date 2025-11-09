@@ -21,8 +21,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
-@Component
 /**
  * Redis 秒杀订单回滚数据操作组件。
  * 负责：
@@ -32,38 +30,52 @@ import java.util.concurrent.TimeUnit;
  * 4) 上报 Micrometer 指标并触发外部告警；
  * 与现有死信队列（DLQ）逻辑解耦。
  */
+/**
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: Redis 秒杀订单回滚数据操作组件。
+ * 负责：
+ * 1) 调用 Lua 脚本执行回滚；
+ * 2) 实现指数退避重试与抖动；
+ * 3) 在最终失败时写入结构化失败日志；
+ * 4) 上报 Micrometer 指标并触发外部告警；
+ * 与现有死信队列（DLQ）逻辑解耦。
+ * @author: 阿星不是程序员
+ **/
+@Slf4j
+@Component
 public class RedisVoucherData {
     
-    // 回滚 Lua 脚本执行器
     @Resource
     private SeckillVoucherRollBackOperate seckillVoucherRollBackOperate;
     
-    // 回滚失败日志持久化服务
     @Resource
     private IRollbackFailureLogService rollbackFailureLogService;
 
-    // 生成日志ID/traceId 的雪花算法
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
-
-    // Micrometer 指标注册器
+    
     @Resource
     private MeterRegistry meterRegistry;
-
-    // 回滚失败告警服务（短信/邮件等，可插拔）
+    
     @Resource
     private IRollbackAlertService rollbackAlertService;
 
+    /**
+     * 最大重试次数，达到后认为最终失败
+     * */
     @Value("${seckill.rollback.retry.maxAttempts:3}")
-    // 最大重试次数，达到后认为最终失败
     private int retryMaxAttempts;
 
+    /**
+     * 初始退避毫秒
+     * */
     @Value("${seckill.rollback.retry.initialBackoffMillis:200}")
-    // 初始退避毫秒
     private long initialBackoffMillis;
 
+    /**
+     * 最大退避毫秒（不再继续扩展）
+     * */
     @Value("${seckill.rollback.retry.maxBackoffMillis:1000}")
-    // 最大退避毫秒（不再继续扩展）
     private long maxBackoffMillis;
     
     /**

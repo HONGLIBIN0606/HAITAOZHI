@@ -28,33 +28,44 @@ import static org.javaup.constant.Constant.SECKILL_VOUCHER_CACHE_INVALIDATION_TO
 import static org.javaup.constant.Constant.SPRING_INJECT_PREFIX_DISTINCTION_NAME;
 
 /**
- * 秒杀券缓存失效广播的 DLQ 消费者：用于失败后的补偿重放。
- *
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: 秒杀券缓存失效广播的 DLQ 消费者：用于失败后的补偿重放。
  * 策略：
  * - 仅进行一次快速重放（通过 Redis 做 60s 去重），避免异常情况下重复重放导致风暴；
  * - 重放仍失败将继续进入 DLQ，供后续人工处理或监控告警。
- */
+ * @author: 阿星不是程序员
+ **/
 @Slf4j
 @Component
 public class SeckillVoucherInvalidationDlqConsumer extends AbstractConsumerHandler<SeckillVoucherInvalidationMessage> {
 
-    // 生产者：用于将重放后的失效广播重新投递到原始 Topic
+    /**
+     * 生产者：用于将重放后的失效广播重新投递到原始 Topic
+     * */
     @Resource
     private SeckillVoucherInvalidationProducer invalidationProducer;
 
-    // Redis：用于短期去重，避免重复重放导致的消息风暴
+    /**
+     * Redis：用于短期去重，避免重复重放导致的消息风暴
+     * */
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    // Micrometer 指标：记录 DLQ 重放的尝试、跳过、成功等行为
+    /**
+     * Micrometer 指标：记录 DLQ 重放的尝试、跳过、成功等行为
+     * */
     @Resource
     private MeterRegistry meterRegistry;
 
-    // 重放去重窗口（秒）：默认 60 秒，限制同一券的短期重复重放
+    /**
+     * 重放去重窗口（秒）：默认 60 秒，限制同一券的短期重复重放
+     * */
     @Value("${seckill.cache.invalidate.dlq.replay.dedupWindowSeconds:60}")
     private long replayDedupWindowSeconds;
 
-    // 审计日志：结构化记录重放行为，支持问题追踪与合规审计
+    /**
+     * 审计日志：结构化记录重放行为，支持问题追踪与合规审计
+     * */
     private static final Logger auditLog = LoggerFactory.getLogger("AUDIT");
 
     /**
@@ -66,7 +77,6 @@ public class SeckillVoucherInvalidationDlqConsumer extends AbstractConsumerHandl
 
     /**
      * Kafka 监听 DLQ：接收字符串消息并委派父类进行统一解析与消费。
-     *
      * 保持最小职责：只转交给父类处理，避免在监听层做业务逻辑。
      */
     @KafkaListener(

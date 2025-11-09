@@ -6,13 +6,10 @@ import org.apache.ibatis.annotations.Update;
 import org.javaup.entity.SeckillVoucher;
 
 /**
- * <p>
- * 秒杀优惠券表，与优惠券是一对一关系 Mapper 接口
- * </p>
- *
- * @author 虎哥
- * @since 2022-01-04
- */
+ * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
+ * @description: 秒杀优惠券表，与优惠券是一对一关系 Mapper
+ * @author: 阿星不是程序员
+ **/
 public interface SeckillVoucherMapper extends BaseMapper<SeckillVoucher> {
    
     @Update("UPDATE tb_seckill_voucher SET stock = stock + 1,update_time = NOW() WHERE voucher_id = #{voucherId}")
