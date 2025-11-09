@@ -1,8 +1,8 @@
 package org.javaup.config;
 
 import org.javaup.execute.RedisRateLimitHandler;
-import org.javaup.lua.RateLimitOperate;
 import org.javaup.lua.SlidingRateLimitOperate;
+import org.javaup.lua.TokenBucketRateLimitOperate;
 import org.javaup.ratelimit.extension.NoOpRateLimitEventListener;
 import org.javaup.ratelimit.extension.NoOpRateLimitPenaltyPolicy;
 import org.javaup.ratelimit.extension.RateLimitEventListener;
@@ -21,13 +21,13 @@ import org.springframework.context.annotation.Bean;
 public class RateLimitAutoConfiguration {
     
     @Bean
-    public RateLimitOperate rateLimitOperate(RedisCache redisCache){
-        return new RateLimitOperate(redisCache);
+    public SlidingRateLimitOperate slidingRateLimitOperate(RedisCache redisCache){
+        return new SlidingRateLimitOperate(redisCache);
     }
     
     @Bean
-    public SlidingRateLimitOperate slidingRateLimitOperate(RedisCache redisCache){
-        return new SlidingRateLimitOperate(redisCache);
+    public TokenBucketRateLimitOperate tokenBucketRateLimitOperate(RedisCache redisCache){
+        return new TokenBucketRateLimitOperate(redisCache);
     }
 
     @Bean
@@ -49,15 +49,15 @@ public class RateLimitAutoConfiguration {
     @Bean
     public RedisRateLimitHandler redisRateLimitHandler(SeckillRateLimitConfigProperties seckillRateLimitConfigProperties,
                                                        RedisCache redisCache,
-                                                       RateLimitOperate rateLimitOperate,
                                                        SlidingRateLimitOperate slidingRateLimitOperate,
+                                                       TokenBucketRateLimitOperate tokenBucketRateLimitOperate,
                                                        RateLimitEventListener rateLimitEventListener,
                                                        RateLimitPenaltyPolicy rateLimitPenaltyPolicy) {
         return new RedisRateLimitHandler(
                 seckillRateLimitConfigProperties, 
-                redisCache, 
-                rateLimitOperate,
+                redisCache,
                 slidingRateLimitOperate,
+                tokenBucketRateLimitOperate,
                 rateLimitEventListener,
                 rateLimitPenaltyPolicy
         );

@@ -63,6 +63,16 @@ public enum RedisKeyManage {
     SECKILL_LIMIT_USER_SW_TAG_KEY("seckill:limit:user:sw:{%s}:%s","秒杀券id（同槽位HashTag）","value为按用户的滑动窗口计数","k"),
 
     /**
+     * 单槽位IP令牌桶限流（HASH，voucherId在同槽位）
+     */
+    SECKILL_LIMIT_IP_TB_TAG_KEY("seckill:limit:ip:tb:{%s}:%s","秒杀券id（同槽位HashTag）","value为按IP的令牌桶HASH（tokens/last_ms）","k"),
+
+    /**
+     * 单槽位用户令牌桶限流（HASH，voucherId在同槽位）
+     */
+    SECKILL_LIMIT_USER_TB_TAG_KEY("seckill:limit:user:tb:{%s}:%s","秒杀券id（同槽位HashTag）","value为按用户的令牌桶HASH（tokens/last_ms）","k"),
+
+    /**
      * 单槽位IP封禁标记（带Hash Tag，voucherId在同槽位）
      */
     SECKILL_BLOCK_IP_TAG_KEY("seckill:block:ip:{%s}:%s","秒杀券id（同槽位HashTag）","value为按IP的临时封禁标记","k"),

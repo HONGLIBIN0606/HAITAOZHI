@@ -14,7 +14,7 @@ public class SeckillRateLimitConfigProperties implements Serializable {
     
     public static final String PREFIX = "rate-limit";
 
-    /** 是否启用滑动窗口限流（默认关闭，使用固定窗口计数） */
+    /** 是否启用滑动窗口限流（默认关闭，使用令牌） */
     private Boolean enableSlidingWindow = false;
 
     /** IP限流窗口毫秒数 */
@@ -69,7 +69,5 @@ public class SeckillRateLimitConfigProperties implements Serializable {
         private Integer userWindowMillis;
         /** 用户最大尝试次数（缺省时使用全局 userMaxAttempts） */
         private Integer userMaxAttempts;
-        /** 是否启用滑动窗口（缺省时使用全局 enableSlidingWindow） */
-        private Boolean enableSlidingWindow;
     }
 }

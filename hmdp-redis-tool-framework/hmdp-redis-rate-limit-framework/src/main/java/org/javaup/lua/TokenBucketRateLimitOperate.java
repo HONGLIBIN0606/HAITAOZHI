@@ -9,28 +9,31 @@ import org.springframework.scripting.support.ResourceScriptSource;
 
 import java.util.List;
 
+/**
+ * 令牌桶限流脚本执行器
+ */
 @Slf4j
-public class RateLimitOperate {
-    
+public class TokenBucketRateLimitOperate {
+
     private final RedisCache redisCache;
-    
-    public RateLimitOperate(RedisCache redisCache) {
+
+    public TokenBucketRateLimitOperate(RedisCache redisCache) {
         this.redisCache = redisCache;
     }
-    
+
     private DefaultRedisScript<Integer> redisScript;
-    
+
     @PostConstruct
     public void init(){
         try {
             redisScript = new DefaultRedisScript<>();
-            redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/rateLimit.lua")));
+            redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource("lua/tokenBucket.lua")));
             redisScript.setResultType(Integer.class);
         } catch (Exception e) {
-            log.error("redisScript init lua error",e);
+            log.error("TokenBucketRateLimitOperate init lua error", e);
         }
     }
-    
+
     public Long execute(List<String> keys, String[] args){
         return (Long)redisCache.getInstance().execute(redisScript, keys, args);
     }

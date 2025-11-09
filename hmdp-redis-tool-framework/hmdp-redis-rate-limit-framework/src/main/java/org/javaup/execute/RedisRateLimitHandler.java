@@ -5,14 +5,14 @@ import org.javaup.config.SeckillRateLimitConfigProperties;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.enums.BaseCode;
 import org.javaup.exception.HmdpFrameException;
-import org.javaup.lua.RateLimitOperate;
 import org.javaup.lua.SlidingRateLimitOperate;
-import org.javaup.redis.RedisCache;
-import org.javaup.redis.RedisKeyBuild;
+import org.javaup.lua.TokenBucketRateLimitOperate;
 import org.javaup.ratelimit.extension.RateLimitContext;
 import org.javaup.ratelimit.extension.RateLimitEventListener;
 import org.javaup.ratelimit.extension.RateLimitPenaltyPolicy;
 import org.javaup.ratelimit.extension.RateLimitScene;
+import org.javaup.redis.RedisCache;
+import org.javaup.redis.RedisKeyBuild;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -27,30 +27,23 @@ public class RedisRateLimitHandler implements RateLimitHandler {
 
     private final SeckillRateLimitConfigProperties seckillRateLimitConfigProperties;
     private final RedisCache redisCache;
-    private final RateLimitOperate rateLimitOperate;
     private final SlidingRateLimitOperate slidingRateLimitOperate;
+    private final TokenBucketRateLimitOperate tokenBucketRateLimitOperate;
     private final RateLimitEventListener rateLimitEventListener;
     private final RateLimitPenaltyPolicy rateLimitPenaltyPolicy;
 
     public RedisRateLimitHandler(SeckillRateLimitConfigProperties seckillRateLimitConfigProperties,
                                  RedisCache redisCache,
-                                 RateLimitOperate rateLimitOperate,
                                  SlidingRateLimitOperate slidingRateLimitOperate,
+                                 TokenBucketRateLimitOperate tokenBucketRateLimitOperate,
                                  RateLimitEventListener rateLimitEventListener,
                                  RateLimitPenaltyPolicy rateLimitPenaltyPolicy) {
         this.seckillRateLimitConfigProperties = seckillRateLimitConfigProperties;
         this.redisCache = redisCache;
-        this.rateLimitOperate = rateLimitOperate;
         this.slidingRateLimitOperate = slidingRateLimitOperate;
+        this.tokenBucketRateLimitOperate = tokenBucketRateLimitOperate;
         this.rateLimitEventListener = rateLimitEventListener;
         this.rateLimitPenaltyPolicy = rateLimitPenaltyPolicy;
-    }
-
-    @Override
-    public void execute(Long voucherId,
-                        Long userId) {
-        // 默认按下单场景处理，以兼容旧调用方
-        execute(voucherId, userId, RateLimitScene.SECKILL_ORDER);
     }
 
     @Override
@@ -70,7 +63,7 @@ public class RedisRateLimitHandler implements RateLimitHandler {
         int userLimitWindowMillis = resolveUserWindow(scene);
         int userLimitMaxAttempts = resolveUserMaxAttempts(scene);
 
-        boolean useSliding = resolveSliding(scene);
+        boolean useSliding = resolveSliding();
         List<String> keys = buildRateLimitKeys(voucherId, userId, clientIp, useSliding);
         String[] args = buildArgs(ipLimitWindowMillis, ipLimitMaxAttempts, userLimitWindowMillis, userLimitMaxAttempts);
 
@@ -167,23 +160,8 @@ public class RedisRateLimitHandler implements RateLimitHandler {
                 seckillRateLimitConfigProperties.getUserMaxAttempts();
     }
 
-    private boolean resolveSliding(RateLimitScene scene) {
-        SeckillRateLimitConfigProperties.EndpointLimit ep = 
-                scene == RateLimitScene.ISSUE_TOKEN 
-                        ? 
-                        seckillRateLimitConfigProperties.getIssue() 
-                        : 
-                        seckillRateLimitConfigProperties.getSeckill();
-        
-        Boolean v = 
-                ep != null 
-                        ? 
-                        ep.getEnableSlidingWindow() 
-                        : 
-                        null;
-        
-        Boolean g = seckillRateLimitConfigProperties.getEnableSlidingWindow();
-        return Boolean.TRUE.equals(v != null ? v : g);
+    private boolean resolveSliding() {
+        return seckillRateLimitConfigProperties.getEnableSlidingWindow();
     }
     
     private String resolveClientIp(){
@@ -251,12 +229,12 @@ public class RedisRateLimitHandler implements RateLimitHandler {
         if (Objects.nonNull(clientIp)) {
             String ipKey = useSliding
                     ? RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_IP_SW_TAG_KEY, voucherId, clientIp).getRelKey()
-                    : RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_IP_TAG_KEY, voucherId, clientIp).getRelKey();
+                    : RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_IP_TB_TAG_KEY, voucherId, clientIp).getRelKey();
             keys.add(ipKey);
         }
         String userKey = useSliding
                 ? RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_USER_SW_TAG_KEY, voucherId, userId).getRelKey()
-                : RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_USER_TAG_KEY, voucherId, userId).getRelKey();
+                : RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_LIMIT_USER_TB_TAG_KEY, voucherId, userId).getRelKey();
         keys.add(userKey);
         return keys;
     }
@@ -299,10 +277,10 @@ public class RedisRateLimitHandler implements RateLimitHandler {
 
     private Integer executeLua(boolean useSliding, List<String> keys, String[] args) {
         return useSliding 
-                ? 
+                ?
                 slidingRateLimitOperate.execute(keys, args).intValue() 
-                : 
-                rateLimitOperate.execute(keys, args).intValue();
+                :
+                tokenBucketRateLimitOperate.execute(keys, args).intValue();
     }
 
     private void handleResult(RateLimitContext ctx) {

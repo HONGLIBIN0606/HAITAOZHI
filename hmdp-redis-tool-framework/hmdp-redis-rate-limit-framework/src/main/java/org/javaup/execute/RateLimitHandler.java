@@ -2,13 +2,6 @@ package org.javaup.execute;
 import org.javaup.ratelimit.extension.RateLimitScene;
 
 public interface RateLimitHandler {
-
-    /**
-     * 执行限流与Lua脚本的综合处理
-     * @param voucherId 秒杀券ID
-     */
-    void execute(Long voucherId,Long userId);
-
     /**
      * 执行限流（带场景），便于为不同接口使用不同的窗口与阈值
      * @param voucherId 秒杀券ID
