@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.4.4, for macos15 (arm64)
 --
--- Host: localhost    Database: hmdp
+-- Host: localhost    Database: hmdp_0
 -- ------------------------------------------------------
 -- Server version	8.4.4
 
@@ -43,7 +43,7 @@ CREATE TABLE `tb_blog` (
 
 LOCK TABLES `tb_blog` WRITE;
 /*!40000 ALTER TABLE `tb_blog` DISABLE KEYS */;
-INSERT INTO `tb_blog` VALUES (4,4,2,'无尽浪漫的夜晚丨在万花丛中摇晃着红酒杯🍷品战斧牛排🥩','/imgs/blogs/7/14/4771fefb-1a87-4252-816c-9f7ec41ffa4a.jpg,/imgs/blogs/4/10/2f07e3c9-ddce-482d-9ea7-c21450f8d7cd.jpg,/imgs/blogs/2/6/b0756279-65da-4f2d-b62a-33f74b06454a.jpg,/imgs/blogs/10/7/7e97f47d-eb49-4dc9-a583-95faa7aed287.jpg,/imgs/blogs/1/2/4a7b496b-2a08-4af7-aa95-df2c3bd0ef97.jpg,/imgs/blogs/14/3/52b290eb-8b5d-403b-8373-ba0bb856d18e.jpg','生活就是一半烟火·一半诗意<br/>手执烟火谋生活·心怀诗意以谋爱·<br/>当然<br/>\r\n男朋友给不了的浪漫要学会自己给🍒<br/>\n无法重来的一生·尽量快乐.<br/><br/>🏰「小筑里·神秘浪漫花园餐厅」🏰<br/><br/>\n💯这是一家最最最美花园的西餐厅·到处都是花餐桌上是花前台是花  美好无处不在\n品一口葡萄酒，维亚红酒马瑟兰·微醺上头工作的疲惫消失无际·生如此多娇🍃<br/><br/>📍地址:延安路200号(家乐福面)<br/><br/>🚌交通:地铁①号线定安路B口出右转过下通道右转就到啦～<br/><br/>--------------🥣菜品详情🥣---------------<br/><br/>「战斧牛排]<br/>\n超大一块战斧牛排经过火焰的炙烤发出阵阵香，外焦里嫩让人垂涎欲滴，切开牛排的那一刻，牛排的汁水顺势流了出来，分熟的牛排肉质软，简直细嫩到犯规，一刻都等不了要放入嘴里咀嚼～<br/><br/>「奶油培根意面」<br/>太太太好吃了💯<br/>我真的无法形容它的美妙，意面混合奶油香菇的香味真的太太太香了，我真的舔盘了，一丁点美味都不想浪费‼️<br/><br/><br/>「香菜汁烤鲈鱼」<br/>这个酱是辣的 真的绝好吃‼️<br/>鲈鱼本身就很嫩没什么刺，烤过之后外皮酥酥的，鱼肉蘸上酱料根本停不下来啊啊啊啊<br/>能吃辣椒的小伙伴一定要尝尝<br/><br/>非常可 好吃子🍽\n<br/>--------------🍃个人感受🍃---------------<br/><br/>【👩🏻‍🍳服务】<br/>小姐姐特别耐心的给我们介绍彩票 <br/>推荐特色菜品，拍照需要帮忙也是尽心尽力配合，太爱他们了<br/><br/>【🍃环境】<br/>比较有格调的西餐厅 整个餐厅的布局可称得上的万花丛生 有种在人间仙境的感觉🌸<br/>集美食美酒与鲜花为一体的风格店铺 令人向往<br/>烟火皆是生活 人间皆是浪漫<br/>',1,104,'2021-12-28 11:50:01','2022-03-10 06:26:34'),(5,1,2,'人均30💰杭州这家港式茶餐厅我疯狂打call‼️','/imgs/blogs/4/7/863cc302-d150-420d-a596-b16e9232a1a6.jpg,/imgs/blogs/11/12/8b37d208-9414-4e78-b065-9199647bb3e3.jpg,/imgs/blogs/4/1/fa74a6d6-3026-4cb7-b0b6-35abb1e52d11.jpg,/imgs/blogs/9/12/ac2ce2fb-0605-4f14-82cc-c962b8c86688.jpg,/imgs/blogs/4/0/26a7cd7e-6320-432c-a0b4-1b7418f45ec7.jpg,/imgs/blogs/15/9/cea51d9b-ac15-49f6-b9f1-9cf81e9b9c85.jpg','又吃到一家好吃的茶餐厅🍴环境是怀旧tvb港风📺边吃边拍照片📷几十种菜品均价都在20+💰可以是很平价了！<br>·<br>店名：九记冰厅(远洋店)<br>地址：杭州市丽水路远洋乐堤港负一楼（溜冰场旁边）<br>·<br>✔️黯然销魂饭（38💰）<br>这碗饭我吹爆！米饭上盖满了甜甜的叉烧 还有两颗溏心蛋🍳每一粒米饭都裹着浓郁的酱汁 光盘了<br>·<br>✔️铜锣湾漏奶华（28💰）<br>黄油吐司烤的脆脆的 上面洒满了可可粉🍫一刀切开 奶盖流心像瀑布一样流出来  满足<br>·<br>✔️神仙一口西多士士（16💰）<br>简简单单却超级好吃！西多士烤的很脆 黄油味浓郁 面包体超级柔软 上面淋了炼乳<br>·<br>✔️怀旧五柳炸蛋饭（28💰）<br>四个鸡蛋炸成蓬松的炸蛋！也太好吃了吧！还有大块鸡排 上淋了酸甜的酱汁 太合我胃口了！！<br>·<br>✔️烧味双拼例牌（66💰）<br>选了烧鹅➕叉烧 他家烧腊品质真的惊艳到我！据说是每日广州发货 到店现烧现卖的黑棕鹅 每口都是正宗的味道！肉质很嫩 皮超级超级酥脆！一口爆油！叉烧肉也一点都不柴 甜甜的很入味 搭配梅子酱很解腻 ！<br>·<br>✔️红烧脆皮乳鸽（18.8💰）<br>乳鸽很大只 这个价格也太划算了吧， 肉质很有嚼劲 脆皮很酥 越吃越香～<br>·<br>✔️大满足小吃拼盘（25💰）<br>翅尖➕咖喱鱼蛋➕蝴蝶虾➕盐酥鸡<br>zui喜欢里面的咖喱鱼！咖喱酱香甜浓郁！鱼蛋很q弹～<br>·<br>✔️港式熊仔丝袜奶茶（19💰）<br>小熊🐻造型的奶茶冰也太可爱了！颜值担当 很地道的丝袜奶茶 茶味特别浓郁～<br>·',2,0,'2021-12-28 12:57:49','2025-11-05 09:35:34'),(6,10,1,'杭州周末好去处｜💰50就可以骑马啦🐎','/imgs/blogs/blog1.jpg','杭州周末好去处｜💰50就可以骑马啦🐎',1,0,'2022-01-11 08:05:47','2022-03-10 01:21:41'),(7,10,1,'杭州周末好去处｜💰50就可以骑马啦🐎','/imgs/blogs/blog1.jpg','杭州周末好去处｜💰50就可以骑马啦🐎',1,0,'2022-01-11 08:05:47','2022-03-10 01:21:42');
+INSERT INTO `tb_blog` VALUES (4,4,1987042234935279617,'无尽浪漫的夜晚丨在万花丛中摇晃着红酒杯🍷品战斧牛排🥩','/imgs/blogs/7/14/4771fefb-1a87-4252-816c-9f7ec41ffa4a.jpg,/imgs/blogs/4/10/2f07e3c9-ddce-482d-9ea7-c21450f8d7cd.jpg,/imgs/blogs/2/6/b0756279-65da-4f2d-b62a-33f74b06454a.jpg,/imgs/blogs/10/7/7e97f47d-eb49-4dc9-a583-95faa7aed287.jpg,/imgs/blogs/1/2/4a7b496b-2a08-4af7-aa95-df2c3bd0ef97.jpg,/imgs/blogs/14/3/52b290eb-8b5d-403b-8373-ba0bb856d18e.jpg','生活就是一半烟火·一半诗意<br/>手执烟火谋生活·心怀诗意以谋爱·<br/>当然<br/>\r\n男朋友给不了的浪漫要学会自己给🍒<br/>\n无法重来的一生·尽量快乐.<br/><br/>🏰「小筑里·神秘浪漫花园餐厅」🏰<br/><br/>\n💯这是一家最最最美花园的西餐厅·到处都是花餐桌上是花前台是花  美好无处不在\n品一口葡萄酒，维亚红酒马瑟兰·微醺上头工作的疲惫消失无际·生如此多娇🍃<br/><br/>📍地址:延安路200号(家乐福面)<br/><br/>🚌交通:地铁①号线定安路B口出右转过下通道右转就到啦～<br/><br/>--------------🥣菜品详情🥣---------------<br/><br/>「战斧牛排]<br/>\n超大一块战斧牛排经过火焰的炙烤发出阵阵香，外焦里嫩让人垂涎欲滴，切开牛排的那一刻，牛排的汁水顺势流了出来，分熟的牛排肉质软，简直细嫩到犯规，一刻都等不了要放入嘴里咀嚼～<br/><br/>「奶油培根意面」<br/>太太太好吃了💯<br/>我真的无法形容它的美妙，意面混合奶油香菇的香味真的太太太香了，我真的舔盘了，一丁点美味都不想浪费‼️<br/><br/><br/>「香菜汁烤鲈鱼」<br/>这个酱是辣的 真的绝好吃‼️<br/>鲈鱼本身就很嫩没什么刺，烤过之后外皮酥酥的，鱼肉蘸上酱料根本停不下来啊啊啊啊<br/>能吃辣椒的小伙伴一定要尝尝<br/><br/>非常可 好吃子🍽\n<br/>--------------🍃个人感受🍃---------------<br/><br/>【👩🏻‍🍳服务】<br/>小姐姐特别耐心的给我们介绍彩票 <br/>推荐特色菜品，拍照需要帮忙也是尽心尽力配合，太爱他们了<br/><br/>【🍃环境】<br/>比较有格调的西餐厅 整个餐厅的布局可称得上的万花丛生 有种在人间仙境的感觉🌸<br/>集美食美酒与鲜花为一体的风格店铺 令人向往<br/>烟火皆是生活 人间皆是浪漫<br/>',1,104,'2021-12-28 11:50:01','2025-11-08 06:28:15'),(5,1,1987042234935279617,'人均30💰杭州这家港式茶餐厅我疯狂打call‼️','/imgs/blogs/4/7/863cc302-d150-420d-a596-b16e9232a1a6.jpg,/imgs/blogs/11/12/8b37d208-9414-4e78-b065-9199647bb3e3.jpg,/imgs/blogs/4/1/fa74a6d6-3026-4cb7-b0b6-35abb1e52d11.jpg,/imgs/blogs/9/12/ac2ce2fb-0605-4f14-82cc-c962b8c86688.jpg,/imgs/blogs/4/0/26a7cd7e-6320-432c-a0b4-1b7418f45ec7.jpg,/imgs/blogs/15/9/cea51d9b-ac15-49f6-b9f1-9cf81e9b9c85.jpg','又吃到一家好吃的茶餐厅🍴环境是怀旧tvb港风📺边吃边拍照片📷几十种菜品均价都在20+💰可以是很平价了！<br>·<br>店名：九记冰厅(远洋店)<br>地址：杭州市丽水路远洋乐堤港负一楼（溜冰场旁边）<br>·<br>✔️黯然销魂饭（38💰）<br>这碗饭我吹爆！米饭上盖满了甜甜的叉烧 还有两颗溏心蛋🍳每一粒米饭都裹着浓郁的酱汁 光盘了<br>·<br>✔️铜锣湾漏奶华（28💰）<br>黄油吐司烤的脆脆的 上面洒满了可可粉🍫一刀切开 奶盖流心像瀑布一样流出来  满足<br>·<br>✔️神仙一口西多士士（16💰）<br>简简单单却超级好吃！西多士烤的很脆 黄油味浓郁 面包体超级柔软 上面淋了炼乳<br>·<br>✔️怀旧五柳炸蛋饭（28💰）<br>四个鸡蛋炸成蓬松的炸蛋！也太好吃了吧！还有大块鸡排 上淋了酸甜的酱汁 太合我胃口了！！<br>·<br>✔️烧味双拼例牌（66💰）<br>选了烧鹅➕叉烧 他家烧腊品质真的惊艳到我！据说是每日广州发货 到店现烧现卖的黑棕鹅 每口都是正宗的味道！肉质很嫩 皮超级超级酥脆！一口爆油！叉烧肉也一点都不柴 甜甜的很入味 搭配梅子酱很解腻 ！<br>·<br>✔️红烧脆皮乳鸽（18.8💰）<br>乳鸽很大只 这个价格也太划算了吧， 肉质很有嚼劲 脆皮很酥 越吃越香～<br>·<br>✔️大满足小吃拼盘（25💰）<br>翅尖➕咖喱鱼蛋➕蝴蝶虾➕盐酥鸡<br>zui喜欢里面的咖喱鱼！咖喱酱香甜浓郁！鱼蛋很q弹～<br>·<br>✔️港式熊仔丝袜奶茶（19💰）<br>小熊🐻造型的奶茶冰也太可爱了！颜值担当 很地道的丝袜奶茶 茶味特别浓郁～<br>·',2,0,'2021-12-28 12:57:49','2025-11-08 06:28:15'),(6,10,1987041610793484289,'杭州周末好去处｜💰50就可以骑马啦🐎','/imgs/blogs/blog1.jpg','杭州周末好去处｜💰50就可以骑马啦🐎',1,0,'2022-01-11 08:05:47','2025-11-08 06:28:09'),(7,10,1987041610793484289,'杭州周末好去处｜💰50就可以骑马啦🐎','/imgs/blogs/blog1.jpg','杭州周末好去处｜💰50就可以骑马啦🐎',1,0,'2022-01-11 08:05:47','2025-11-08 06:28:09');
 /*!40000 ALTER TABLE `tb_blog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -138,17 +138,18 @@ LOCK TABLES `tb_rollback_failure_log` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_seckill_voucher`
+-- Table structure for table `tb_seckill_voucher_0`
 --
 
-DROP TABLE IF EXISTS `tb_seckill_voucher`;
+DROP TABLE IF EXISTS `tb_seckill_voucher_0`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_seckill_voucher` (
+CREATE TABLE `tb_seckill_voucher_0` (
   `id` bigint NOT NULL,
   `voucher_id` bigint unsigned NOT NULL COMMENT '关联的优惠券的id',
+  `init_stock` int NOT NULL COMMENT '初始化的库存',
   `stock` int NOT NULL COMMENT '库存',
-  `allowed_levels` varchar(512) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '允许参与的会员等级，逗号分隔，如："1,2,3"',
+  `allowed_levels` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '允许参与的会员等级，逗号分隔，如："1,2,3"',
   `min_level` int DEFAULT NULL COMMENT '最低会员等级',
   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `begin_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '生效时间',
@@ -159,13 +160,43 @@ CREATE TABLE `tb_seckill_voucher` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_seckill_voucher`
+-- Dumping data for table `tb_seckill_voucher_0`
 --
 
-LOCK TABLES `tb_seckill_voucher` WRITE;
-/*!40000 ALTER TABLE `tb_seckill_voucher` DISABLE KEYS */;
-INSERT INTO `tb_seckill_voucher` VALUES (1985292621462933505,1,195,NULL,NULL,'2025-11-03 10:27:00','2025-11-02 13:00:00','2025-12-02 15:59:59','2025-11-06 08:23:56');
-/*!40000 ALTER TABLE `tb_seckill_voucher` ENABLE KEYS */;
+LOCK TABLES `tb_seckill_voucher_0` WRITE;
+/*!40000 ALTER TABLE `tb_seckill_voucher_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_seckill_voucher_0` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_seckill_voucher_1`
+--
+
+DROP TABLE IF EXISTS `tb_seckill_voucher_1`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_seckill_voucher_1` (
+  `id` bigint NOT NULL,
+  `voucher_id` bigint unsigned NOT NULL COMMENT '关联的优惠券的id',
+  `init_stock` int NOT NULL COMMENT '初始化的库存',
+  `stock` int NOT NULL COMMENT '库存',
+  `allowed_levels` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '允许参与的会员等级，逗号分隔，如："1,2,3"',
+  `min_level` int DEFAULT NULL COMMENT '最低会员等级',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `begin_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '生效时间',
+  `end_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '失效时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT COMMENT='秒杀优惠券表，与优惠券是一对一关系';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_seckill_voucher_1`
+--
+
+LOCK TABLES `tb_seckill_voucher_1` WRITE;
+/*!40000 ALTER TABLE `tb_seckill_voucher_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_seckill_voucher_1` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -262,13 +293,13 @@ LOCK TABLES `tb_sign` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_user`
+-- Table structure for table `tb_user_0`
 --
 
-DROP TABLE IF EXISTS `tb_user`;
+DROP TABLE IF EXISTS `tb_user_0`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_user` (
+CREATE TABLE `tb_user_0` (
   `id` bigint unsigned NOT NULL COMMENT '主键',
   `phone` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机号码',
   `password` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '密码，加密存储',
@@ -282,23 +313,51 @@ CREATE TABLE `tb_user` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_user`
+-- Dumping data for table `tb_user_0`
 --
 
-LOCK TABLES `tb_user` WRITE;
-/*!40000 ALTER TABLE `tb_user` DISABLE KEYS */;
-INSERT INTO `tb_user` VALUES (1,'13686869696','','小鱼同学','/imgs/blogs/blog1.jpg','2021-12-24 02:27:19','2022-01-11 08:04:00'),(2,'13838411438','','可可今天不吃肉','/imgs/icons/kkjtbcr.jpg','2021-12-24 07:14:39','2021-12-28 11:58:04'),(3,'13456789001','','可爱多','/imgs/icons/user5-icon.png','2022-01-07 08:11:33','2025-11-06 07:08:22');
-/*!40000 ALTER TABLE `tb_user` ENABLE KEYS */;
+LOCK TABLES `tb_user_0` WRITE;
+/*!40000 ALTER TABLE `tb_user_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_user_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_user_info`
+-- Table structure for table `tb_user_1`
 --
 
-DROP TABLE IF EXISTS `tb_user_info`;
+DROP TABLE IF EXISTS `tb_user_1`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_user_info` (
+CREATE TABLE `tb_user_1` (
+  `id` bigint unsigned NOT NULL COMMENT '主键',
+  `phone` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机号码',
+  `password` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '密码，加密存储',
+  `nick_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '昵称，默认是用户id',
+  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '人物头像',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uniqe_key_phone` (`phone`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_user_1`
+--
+
+LOCK TABLES `tb_user_1` WRITE;
+/*!40000 ALTER TABLE `tb_user_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_user_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_user_info_0`
+--
+
+DROP TABLE IF EXISTS `tb_user_info_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_user_info_0` (
   `id` bigint unsigned NOT NULL COMMENT '主键',
   `user_id` bigint unsigned NOT NULL COMMENT '主键，用户id',
   `city` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '城市名称',
@@ -316,22 +375,111 @@ CREATE TABLE `tb_user_info` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_user_info`
+-- Dumping data for table `tb_user_info_0`
 --
 
-LOCK TABLES `tb_user_info` WRITE;
-/*!40000 ALTER TABLE `tb_user_info` DISABLE KEYS */;
-/*!40000 ALTER TABLE `tb_user_info` ENABLE KEYS */;
+LOCK TABLES `tb_user_info_0` WRITE;
+/*!40000 ALTER TABLE `tb_user_info_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_user_info_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_voucher`
+-- Table structure for table `tb_user_info_1`
 --
 
-DROP TABLE IF EXISTS `tb_voucher`;
+DROP TABLE IF EXISTS `tb_user_info_1`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_voucher` (
+CREATE TABLE `tb_user_info_1` (
+  `id` bigint unsigned NOT NULL COMMENT '主键',
+  `user_id` bigint unsigned NOT NULL COMMENT '主键，用户id',
+  `city` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '城市名称',
+  `introduce` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '个人介绍，不要超过128个字符',
+  `fans` int unsigned DEFAULT '0' COMMENT '粉丝数量',
+  `followee` int unsigned DEFAULT '0' COMMENT '关注的人的数量',
+  `gender` tinyint unsigned DEFAULT '0' COMMENT '性别，0：男，1：女',
+  `birthday` date DEFAULT NULL COMMENT '生日',
+  `credits` int unsigned DEFAULT '0' COMMENT '积分',
+  `level` tinyint unsigned DEFAULT '0' COMMENT '会员级别，0~9级,0代表未开通会员',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_user_info_1`
+--
+
+LOCK TABLES `tb_user_info_1` WRITE;
+/*!40000 ALTER TABLE `tb_user_info_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_user_info_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_user_phone_0`
+--
+
+DROP TABLE IF EXISTS `tb_user_phone_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_user_phone_0` (
+  `id` bigint NOT NULL COMMENT '主键id',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `phone` varchar(512) NOT NULL COMMENT '手机号',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `phone_idx` (`phone`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户手机表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_user_phone_0`
+--
+
+LOCK TABLES `tb_user_phone_0` WRITE;
+/*!40000 ALTER TABLE `tb_user_phone_0` DISABLE KEYS */;
+INSERT INTO `tb_user_phone_0` VALUES (1987042234952056833,1987042234935279617,'13838411438','2025-11-08 06:19:20','2025-11-08 06:19:20'),(1987042505568550913,1987042505555968001,'13456789001','2025-11-08 06:20:25','2025-11-08 06:20:25');
+/*!40000 ALTER TABLE `tb_user_phone_0` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_user_phone_1`
+--
+
+DROP TABLE IF EXISTS `tb_user_phone_1`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_user_phone_1` (
+  `id` bigint NOT NULL COMMENT '主键id',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `phone` varchar(512) NOT NULL COMMENT '手机号',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `phone_idx` (`phone`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户手机表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_user_phone_1`
+--
+
+LOCK TABLES `tb_user_phone_1` WRITE;
+/*!40000 ALTER TABLE `tb_user_phone_1` DISABLE KEYS */;
+INSERT INTO `tb_user_phone_1` VALUES (1987041610910924802,1987041610793484289,'13686869696','2025-11-08 06:16:52','2025-11-08 06:16:52');
+/*!40000 ALTER TABLE `tb_user_phone_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_voucher_0`
+--
+
+DROP TABLE IF EXISTS `tb_voucher_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_voucher_0` (
   `id` bigint unsigned NOT NULL COMMENT '主键',
   `shop_id` bigint unsigned DEFAULT NULL COMMENT '商铺id',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '代金券标题',
@@ -348,23 +496,54 @@ CREATE TABLE `tb_voucher` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_voucher`
+-- Dumping data for table `tb_voucher_0`
 --
 
-LOCK TABLES `tb_voucher` WRITE;
-/*!40000 ALTER TABLE `tb_voucher` DISABLE KEYS */;
-INSERT INTO `tb_voucher` VALUES (1,1,'50元代金券','周一至周日均可使用','全场通用\\n无需预约\\n可无限叠加\\不兑现、不找零\\n仅限堂食',4750,5000,1,1,'2025-11-03 10:27:00','2025-11-05 09:54:16');
-/*!40000 ALTER TABLE `tb_voucher` ENABLE KEYS */;
+LOCK TABLES `tb_voucher_0` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_voucher_order`
+-- Table structure for table `tb_voucher_1`
 --
 
-DROP TABLE IF EXISTS `tb_voucher_order`;
+DROP TABLE IF EXISTS `tb_voucher_1`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_voucher_order` (
+CREATE TABLE `tb_voucher_1` (
+  `id` bigint unsigned NOT NULL COMMENT '主键',
+  `shop_id` bigint unsigned DEFAULT NULL COMMENT '商铺id',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '代金券标题',
+  `sub_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '副标题',
+  `rules` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '使用规则',
+  `pay_value` bigint unsigned NOT NULL COMMENT '支付金额，单位是分。例如200代表2元',
+  `actual_value` bigint NOT NULL COMMENT '抵扣金额，单位是分。例如200代表2元',
+  `type` tinyint unsigned NOT NULL DEFAULT '0' COMMENT '0,普通券；1,秒杀券',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '1,上架; 2,下架; 3,过期',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_voucher_1`
+--
+
+LOCK TABLES `tb_voucher_1` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_voucher_order_0`
+--
+
+DROP TABLE IF EXISTS `tb_voucher_order_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_voucher_order_0` (
   `id` bigint NOT NULL COMMENT '主键',
   `user_id` bigint unsigned NOT NULL COMMENT '下单的用户id',
   `voucher_id` bigint unsigned NOT NULL COMMENT '购买的代金券id',
@@ -381,23 +560,54 @@ CREATE TABLE `tb_voucher_order` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_voucher_order`
+-- Dumping data for table `tb_voucher_order_0`
 --
 
-LOCK TABLES `tb_voucher_order` WRITE;
-/*!40000 ALTER TABLE `tb_voucher_order` DISABLE KEYS */;
-INSERT INTO `tb_voucher_order` VALUES (1986348799030804482,1985281153640185857,1,1,1,'2025-11-06 08:23:56',NULL,NULL,NULL,'2025-11-06 08:23:56');
-/*!40000 ALTER TABLE `tb_voucher_order` ENABLE KEYS */;
+LOCK TABLES `tb_voucher_order_0` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_order_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_order_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_voucher_order_router`
+-- Table structure for table `tb_voucher_order_1`
 --
 
-DROP TABLE IF EXISTS `tb_voucher_order_router`;
+DROP TABLE IF EXISTS `tb_voucher_order_1`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_voucher_order_router` (
+CREATE TABLE `tb_voucher_order_1` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `user_id` bigint unsigned NOT NULL COMMENT '下单的用户id',
+  `voucher_id` bigint unsigned NOT NULL COMMENT '购买的代金券id',
+  `pay_type` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '支付方式 1：余额支付；2：支付宝；3：微信',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '订单状态，1：未支付；2：已支付；3：已核销；4：已取消；5：退款中；6：已退款',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '下单时间',
+  `pay_time` timestamp NULL DEFAULT NULL COMMENT '支付时间',
+  `use_time` timestamp NULL DEFAULT NULL COMMENT '核销时间',
+  `refund_time` timestamp NULL DEFAULT NULL COMMENT '退款时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `tb_voucher_order_user_id_voucher_id_IDX` (`user_id`,`voucher_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_voucher_order_1`
+--
+
+LOCK TABLES `tb_voucher_order_1` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_order_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_order_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_voucher_order_router_0`
+--
+
+DROP TABLE IF EXISTS `tb_voucher_order_router_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_voucher_order_router_0` (
   `id` bigint NOT NULL COMMENT '主键',
   `order_id` bigint NOT NULL COMMENT '订单id',
   `user_id` bigint unsigned NOT NULL COMMENT '用户id',
@@ -409,29 +619,55 @@ CREATE TABLE `tb_voucher_order_router` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_voucher_order_router`
+-- Dumping data for table `tb_voucher_order_router_0`
 --
 
-LOCK TABLES `tb_voucher_order_router` WRITE;
-/*!40000 ALTER TABLE `tb_voucher_order_router` DISABLE KEYS */;
-INSERT INTO `tb_voucher_order_router` VALUES (1986348812209307650,1986348799030804482,1985281153640185857,1,'2025-11-06 08:23:56','2025-11-06 08:23:56');
-/*!40000 ALTER TABLE `tb_voucher_order_router` ENABLE KEYS */;
+LOCK TABLES `tb_voucher_order_router_0` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_order_router_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_order_router_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tb_voucher_reconcile_log`
+-- Table structure for table `tb_voucher_order_router_1`
 --
 
-DROP TABLE IF EXISTS `tb_voucher_reconcile_log`;
+DROP TABLE IF EXISTS `tb_voucher_order_router_1`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tb_voucher_reconcile_log` (
+CREATE TABLE `tb_voucher_order_router_1` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `order_id` bigint NOT NULL COMMENT '订单id',
+  `user_id` bigint unsigned NOT NULL COMMENT '用户id',
+  `voucher_id` bigint unsigned NOT NULL COMMENT '代金券id',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_voucher_order_router_1`
+--
+
+LOCK TABLES `tb_voucher_order_router_1` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_order_router_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_order_router_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_voucher_reconcile_log_0`
+--
+
+DROP TABLE IF EXISTS `tb_voucher_reconcile_log_0`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_voucher_reconcile_log_0` (
   `id` bigint NOT NULL COMMENT '主键',
   `order_id` bigint NOT NULL COMMENT '订单id',
   `user_id` bigint unsigned NOT NULL COMMENT '下单的用户id',
   `voucher_id` bigint unsigned NOT NULL COMMENT '购买的代金券id',
-  `message_id` varchar(64) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Kafka消息uuid',
-  `detail` varchar(1024) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '差异说明',
+  `message_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Kafka消息uuid',
+  `detail` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '差异说明',
   `before_qty` int DEFAULT NULL COMMENT '改变之前库存数量',
   `change_qty` int DEFAULT NULL COMMENT '本次改变数量',
   `after_qty` int DEFAULT NULL COMMENT '改变之后库存数量',
@@ -449,17 +685,55 @@ CREATE TABLE `tb_voucher_reconcile_log` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tb_voucher_reconcile_log`
+-- Dumping data for table `tb_voucher_reconcile_log_0`
 --
 
-LOCK TABLES `tb_voucher_reconcile_log` WRITE;
-/*!40000 ALTER TABLE `tb_voucher_reconcile_log` DISABLE KEYS */;
-INSERT INTO `tb_voucher_reconcile_log` VALUES (1986290267426168834,1986290245347352578,1985281153640185857,1,'977afed0-e1dc-498f-8201-a8558ada75d6','order created',197,1,196,1986290245347352579,-1,1,1,'2025-11-06 04:31:18','2025-11-06 04:31:18'),(1986315068580622337,1986315046665383938,1985281153640185857,1,'4e2681e1-d2e2-4cee-be14-1659269a63ba','order created',198,1,197,1986315046665383939,-1,1,1,'2025-11-06 06:09:51','2025-11-06 06:09:51'),(1986318026970046465,1986318013929955330,1985281153640185857,1,'4ef52a2d-21a8-4596-85f2-473825329f29','order created',197,1,196,1986318013929955331,-1,1,1,'2025-11-06 06:21:36','2025-11-06 06:21:36'),(1986348812234473474,1986348799030804482,1985281153640185857,1,'cf566b17-4554-4023-b7cc-52966b951619','order created',196,1,195,1986348799030804483,-1,1,1,'2025-11-06 08:23:56','2025-11-06 08:23:56');
-/*!40000 ALTER TABLE `tb_voucher_reconcile_log` ENABLE KEYS */;
+LOCK TABLES `tb_voucher_reconcile_log_0` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_reconcile_log_0` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_reconcile_log_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Dumping routines for database 'hmdp'
+-- Table structure for table `tb_voucher_reconcile_log_1`
+--
+
+DROP TABLE IF EXISTS `tb_voucher_reconcile_log_1`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_voucher_reconcile_log_1` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `order_id` bigint NOT NULL COMMENT '订单id',
+  `user_id` bigint unsigned NOT NULL COMMENT '下单的用户id',
+  `voucher_id` bigint unsigned NOT NULL COMMENT '购买的代金券id',
+  `message_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'Kafka消息uuid',
+  `detail` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '差异说明',
+  `before_qty` int DEFAULT NULL COMMENT '改变之前库存数量',
+  `change_qty` int DEFAULT NULL COMMENT '本次改变数量',
+  `after_qty` int DEFAULT NULL COMMENT '改变之后库存数量',
+  `trace_id` bigint DEFAULT NULL COMMENT '追踪唯一标识',
+  `log_type` int DEFAULT '-1' COMMENT '记录类型 -1:扣减 1:恢复',
+  `business_type` int DEFAULT '1' COMMENT '业务类型：1创建订单成功；2创建订单超时；3创建订单失败',
+  `reconciliation_status` int NOT NULL DEFAULT '1' COMMENT '对账状态：1待处理；2异常；3不一致；4一致',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_order_id` (`order_id`) USING BTREE,
+  KEY `idx_message_id` (`message_id`) USING BTREE,
+  KEY `idx_trace_id` (`trace_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_voucher_reconcile_log_1`
+--
+
+LOCK TABLES `tb_voucher_reconcile_log_1` WRITE;
+/*!40000 ALTER TABLE `tb_voucher_reconcile_log_1` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_voucher_reconcile_log_1` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Dumping routines for database 'hmdp_0'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -471,4 +745,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-06 18:34:10
+-- Dump completed on 2025-11-10 16:05:31
