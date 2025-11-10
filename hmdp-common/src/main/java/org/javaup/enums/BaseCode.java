@@ -31,6 +31,10 @@ public enum BaseCode {
     
     AFTER_SECKILL_VOUCHER_REMAIN_STOCK_NOT_NEGATIVE_NUMBER(10010,"修改后的剩余库存不能为负数"),
     
+    VOUCHER_UNAVAILABLE(10011,"优惠券已下架"),
+    
+    VOUCHER_EXPIRED(10012,"优惠券已过期"),
+    
     USER_NOT_EXIST(20000, "用户不存在"),
     
     USER_ALREADY_PURCHASE(20001, "用户已经购买"),

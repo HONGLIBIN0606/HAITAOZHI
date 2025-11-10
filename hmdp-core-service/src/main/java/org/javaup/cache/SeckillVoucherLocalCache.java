@@ -4,7 +4,7 @@ import cn.hutool.core.date.LocalDateTimeUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
-import org.javaup.entity.SeckillVoucher;
+import org.javaup.model.SeckillVoucherFullModel;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -17,11 +17,11 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class SeckillVoucherLocalCache {
 
-    private final Cache<Long, SeckillVoucher> cache = Caffeine.newBuilder()
+    private final Cache<Long, SeckillVoucherFullModel> cache = Caffeine.newBuilder()
             .maximumSize(10000)
-            .expireAfter(new Expiry<Long, SeckillVoucher>() {
+            .expireAfter(new Expiry<Long, SeckillVoucherFullModel>() {
                 @Override
-                public long expireAfterCreate(Long key, SeckillVoucher value, long currentTime) {
+                public long expireAfterCreate(Long key, SeckillVoucherFullModel value, long currentTime) {
                     long ttlSeconds = 60L;
                     if (value != null && value.getEndTime() != null) {
                         ttlSeconds = Math.max(
@@ -33,22 +33,22 @@ public class SeckillVoucherLocalCache {
                 }
 
                 @Override
-                public long expireAfterUpdate(Long key, SeckillVoucher value, long currentTime, long currentDuration) {
+                public long expireAfterUpdate(Long key, SeckillVoucherFullModel value, long currentTime, long currentDuration) {
                     return currentDuration;
                 }
 
                 @Override
-                public long expireAfterRead(Long key, SeckillVoucher value, long currentTime, long currentDuration) {
+                public long expireAfterRead(Long key, SeckillVoucherFullModel value, long currentTime, long currentDuration) {
                     return currentDuration;
                 }
             })
             .build();
 
-    public SeckillVoucher get(Long voucherId) {
+    public SeckillVoucherFullModel get(Long voucherId) {
         return cache.getIfPresent(voucherId);
     }
 
-    public void put(Long voucherId, SeckillVoucher voucher) {
+    public void put(Long voucherId, SeckillVoucherFullModel voucher) {
         if (voucherId != null && voucher != null) {
             cache.put(voucherId, voucher);
         }

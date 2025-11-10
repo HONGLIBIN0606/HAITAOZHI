@@ -17,7 +17,6 @@ import org.javaup.dto.GetVoucherOrderByVoucherIdDto;
 import org.javaup.dto.GetVoucherOrderDto;
 import org.javaup.dto.Result;
 import org.javaup.dto.VoucherOrderDto;
-import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.UserInfo;
 import org.javaup.entity.VoucherOrder;
 import org.javaup.entity.VoucherOrderRouter;
@@ -32,6 +31,7 @@ import org.javaup.lua.SeckillVoucherDomain;
 import org.javaup.lua.SeckillVoucherOperate;
 import org.javaup.mapper.VoucherOrderMapper;
 import org.javaup.mapper.VoucherOrderRouterMapper;
+import org.javaup.model.SeckillVoucherFullModel;
 import org.javaup.redis.RedisCacheImpl;
 import org.javaup.redis.RedisKeyBuild;
 import org.javaup.repeatexecutelimit.annotion.RepeatExecuteLimit;
@@ -282,9 +282,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     }
     
     public Result<Long> doSeckillVoucherV2(Long voucherId) {
-        SeckillVoucher seckillVoucher = seckillVoucherService.queryByVoucherId(voucherId);
+        SeckillVoucherFullModel seckillVoucherFullModel = seckillVoucherService.queryByVoucherId(voucherId);
         Long userId = UserHolder.getUser().getId();
-        verifyUserLevel(seckillVoucher,userId);
+        verifyUserLevel(seckillVoucherFullModel,userId);
         // 限流统一在控制器层执行，避免重复计数与双重拦截
         long orderId = snowflakeIdGenerator.nextId();
         long traceId = snowflakeIdGenerator.nextId();
@@ -294,17 +294,18 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId).getRelKey(),
                 RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_TRACE_LOG_TAG_KEY, voucherId).getRelKey()
         );
-        String[] args = new String[8];
+        String[] args = new String[9];
         args[0] = voucherId.toString();
         args[1] = userId.toString();
-        args[2] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getBeginTime()));
-        args[3] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getEndTime()));
-        args[4] = String.valueOf(orderId);
-        args[5] = String.valueOf(traceId);
-        args[6] = String.valueOf(LogType.DEDUCT.getCode());
-        long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucher.getEndTime()).getSeconds();
+        args[2] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucherFullModel.getBeginTime()));
+        args[3] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucherFullModel.getEndTime()));
+        args[4] = String.valueOf(seckillVoucherFullModel.getStatus());
+        args[5] = String.valueOf(orderId);
+        args[6] = String.valueOf(traceId);
+        args[7] = String.valueOf(LogType.DEDUCT.getCode());
+        long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucherFullModel.getEndTime()).getSeconds();
         long ttlSeconds = Math.max(1L, secondsUntilEnd + Duration.ofDays(1).getSeconds());
-        args[7] = String.valueOf(ttlSeconds);
+        args[8] = String.valueOf(ttlSeconds);
         SeckillVoucherDomain seckillVoucherDomain = seckillVoucherOperate.execute(
                 keys,
                 args
@@ -331,9 +332,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return Result.ok(orderId);
     }
     
-    public void verifyUserLevel(SeckillVoucher seckillVoucher,Long userId){
-        String allowedLevelsStr = seckillVoucher.getAllowedLevels();
-        Integer minLevel = seckillVoucher.getMinLevel();
+    public void verifyUserLevel(SeckillVoucherFullModel seckillVoucherFullModel,Long userId){
+        String allowedLevelsStr = seckillVoucherFullModel.getAllowedLevels();
+        Integer minLevel = seckillVoucherFullModel.getMinLevel();
         boolean hasLevelRule = StrUtil.isNotBlank(allowedLevelsStr) || Objects.nonNull(minLevel);
         if (!hasLevelRule) {
             return;
@@ -357,8 +358,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                     allowed = allowedLevels.contains(level);
                 }
             } catch (Exception parseEx) {
-                log.warn("allowedLevels 解析失败, voucherId={}, raw={}", 
-                        seckillVoucher.getVoucherId(), 
+                log.warn("allowedLevels 解析失败, voucherId={}, raw={}",
+                        seckillVoucherFullModel.getVoucherId(), 
                         allowedLevelsStr, parseEx);
             }
         }
@@ -561,13 +562,13 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      */
     private boolean autoIssueVoucherToEarliestSubscriber(final Long voucherId, final Long excludeUserId) {
         // 查询券信息，用于校验和TTL计算
-        SeckillVoucher seckillVoucher = seckillVoucherService.queryByVoucherId(voucherId);
+        SeckillVoucherFullModel seckillVoucherFullModel = seckillVoucherService.queryByVoucherId(voucherId);
         // 校验券数据完整性（开始/结束时间必须存在）
-        if (Objects.isNull(seckillVoucher) 
+        if (Objects.isNull(seckillVoucherFullModel) 
                 || 
-                Objects.isNull(seckillVoucher.getBeginTime()) 
+                Objects.isNull(seckillVoucherFullModel.getBeginTime()) 
                 ||
-                Objects.isNull(seckillVoucher.getEndTime())) {
+                Objects.isNull(seckillVoucherFullModel.getEndTime())) {
             // 数据不完整时终止自动发券
             return false;
         }
@@ -578,7 +579,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return false;
         }
         // 执行扣减与消息下发，并在成功后移除候选的ZSET位置
-        return issueToCandidate(voucherId, candidateUserIdStr, seckillVoucher);
+        return issueToCandidate(voucherId, candidateUserIdStr, seckillVoucherFullModel);
     }
 
     /**
@@ -644,12 +645,14 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     /**
      * 对候选用户执行Lua扣减与消息下发，并从订阅ZSET移除（成功后）
      * */
-    private boolean issueToCandidate(final Long voucherId, final String candidateUserIdStr, final SeckillVoucher seckillVoucher) {
+    private boolean issueToCandidate(final Long voucherId, 
+                                     final String candidateUserIdStr, 
+                                     final SeckillVoucherFullModel seckillVoucherFullModel) {
         // 将候选用户id转换为Long
         Long candidateUserId = Long.valueOf(candidateUserIdStr);
         // 校验人群规则（不满足则跳过）
         try {
-            verifyUserLevel(seckillVoucher, candidateUserId);
+            verifyUserLevel(seckillVoucherFullModel, candidateUserId);
         } catch (Exception e) {
             // 校验失败记录日志并返回
             log.info("候选用户不满足人群规则，自动发券跳过。voucherId={}, userId={}", voucherId, candidateUserId);
@@ -662,7 +665,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         // 生成traceId
         long traceId = snowflakeIdGenerator.nextId();
         // 构建Lua入参数组
-        String[] args = buildSeckillArgs(voucherId, candidateUserIdStr, seckillVoucher, orderId, traceId);
+        String[] args = buildSeckillArgs(voucherId, candidateUserIdStr, seckillVoucherFullModel, orderId, traceId);
         // 执行秒杀扣减Lua脚本
         SeckillVoucherDomain domain = seckillVoucherOperate.execute(keys, args);
         // 校验Lua执行结果是否成功
@@ -712,27 +715,29 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
      * */
     private String[] buildSeckillArgs(final Long voucherId,
                                       final String userIdStr,
-                                      final SeckillVoucher seckillVoucher,
+                                      final SeckillVoucherFullModel seckillVoucherFullModel,
                                       final long orderId,
                                       final long traceId) {
         // 初始化数组长度为8
-        String[] args = new String[8];
+        String[] args = new String[9];
         // 写入voucherId
         args[0] = voucherId.toString();
         // 写入userId
         args[1] = userIdStr;
         // 写入券开始时间（毫秒）
-        args[2] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getBeginTime()));
+        args[2] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucherFullModel.getBeginTime()));
         // 写入券结束时间（毫秒）
-        args[3] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucher.getEndTime()));
+        args[3] = String.valueOf(LocalDateTimeUtil.toEpochMilli(seckillVoucherFullModel.getEndTime()));
+        // 写入优惠券状态
+        args[4] = String.valueOf(seckillVoucherFullModel.getStatus());
         // 写入订单id
-        args[4] = String.valueOf(orderId);
+        args[5] = String.valueOf(orderId);
         // 写入traceId
-        args[5] = String.valueOf(traceId);
+        args[6] = String.valueOf(traceId);
         // 写入扣减日志类型
-        args[6] = String.valueOf(LogType.DEDUCT.getCode());
+        args[7] = String.valueOf(LogType.DEDUCT.getCode());
         // 计算TTL秒数并写入
-        args[7] = String.valueOf(computeTtlSeconds(seckillVoucher));
+        args[8] = String.valueOf(computeTtlSeconds(seckillVoucherFullModel));
         // 返回入参数组
         return args;
     }
@@ -740,9 +745,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     /**
      * 计算缓存TTL秒数：至结束时间的剩余秒数+1天，至少为1秒
      * */
-    private long computeTtlSeconds(final SeckillVoucher seckillVoucher) {
+    private long computeTtlSeconds(final SeckillVoucherFullModel seckillVoucherFullModel) {
         // 距离结束时间的秒数
-        long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucher.getEndTime()).getSeconds();
+        long secondsUntilEnd = Duration.between(LocalDateTimeUtil.now(), seckillVoucherFullModel.getEndTime()).getSeconds();
         // 叠加额外一天，并保证最小值为1秒
         return Math.max(1L, secondsUntilEnd + Duration.ofDays(1).getSeconds());
     }

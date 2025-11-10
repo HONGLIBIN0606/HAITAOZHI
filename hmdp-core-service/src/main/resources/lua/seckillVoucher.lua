@@ -12,12 +12,13 @@ local userId = ARGV[2]
 -- 活动开始/结束时间（毫秒）
 local beginTime = tonumber(ARGV[3])
 local endTime = tonumber(ARGV[4])
+local status = tonumber(ARGV[5])
 -- 订单id与日志TTL（秒）
-local orderId = ARGV[5]
+local orderId = ARGV[6]
 -- traceId
-local traceId = ARGV[6]
-local logType = ARGV[7]
-local ttlSeconds = tonumber(ARGV[8])
+local traceId = ARGV[7]
+local logType = ARGV[8]
+local ttlSeconds = tonumber(ARGV[9])
 -- 备注：方案A不分片，所有操作在同槽位单键内完成
 
 -- 3.脚本业务
@@ -31,6 +32,13 @@ if nowMillis < beginTime then
 end
 if nowMillis > endTime then
     return string.format('{"%s": %d}', 'code', 10003)
+end
+-- 判断优惠券状态
+if (status == 2) then
+    return string.format('{"%s": %d}', 'code', 10011)
+end
+if (status == 3) then
+    return string.format('{"%s": %d}', 'code', 10012)
 end
 local stock = redis.call('get', stockKey);
 -- 缓存中的秒杀券库存为空，则直接返回

@@ -1,21 +1,25 @@
 package org.javaup.service.impl;
 
 import cn.hutool.core.date.LocalDateTimeUtil;
-import org.javaup.cache.SeckillVoucherLocalCache;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.javaup.cache.SeckillVoucherLocalCache;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.entity.SeckillVoucher;
+import org.javaup.entity.Voucher;
 import org.javaup.handler.BloomFilterHandlerFactory;
 import org.javaup.mapper.SeckillVoucherMapper;
+import org.javaup.model.SeckillVoucherFullModel;
 import org.javaup.redis.RedisCache;
 import org.javaup.redis.RedisKeyBuild;
 import org.javaup.service.ISeckillVoucherService;
+import org.javaup.service.IVoucherService;
 import org.javaup.servicelock.LockType;
 import org.javaup.servicelock.annotion.ServiceLock;
 import org.javaup.util.ServiceLockTool;
 import org.redisson.api.RLock;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,23 +55,27 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
     @Resource
     private SeckillVoucherMapper seckillVoucherMapper;
     
+    @Resource
+    private IVoucherService voucherService;
+    
     
     @ServiceLock(lockType= LockType.Read,name = UPDATE_SECKILL_VOUCHER_LOCK,keys = {"#voucherId"})
     @Override
-    public SeckillVoucher queryByVoucherId(Long voucherId) {
+    public SeckillVoucherFullModel queryByVoucherId(Long voucherId) {
         // 先查本地缓存，命中则直接返回
-        SeckillVoucher localCacheHit = seckillVoucherLocalCache.get(voucherId);
+        SeckillVoucherFullModel localCacheHit = seckillVoucherLocalCache.get(voucherId);
         if (Objects.nonNull(localCacheHit)) {
             return localCacheHit;
         }
         // 双重检测解决缓存击穿
-        SeckillVoucher seckillVoucher =
-                redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId), SeckillVoucher.class);
+        SeckillVoucherFullModel seckillVoucherFullModel =
+                redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId), 
+                        SeckillVoucherFullModel.class);
         // 如果缓存中存在就直接返回
-        if (Objects.nonNull(seckillVoucher)) {   
+        if (Objects.nonNull(seckillVoucherFullModel)) {   
             // 写入本地缓存，加快后续访问
-            seckillVoucherLocalCache.put(voucherId, seckillVoucher);
-            return seckillVoucher;
+            seckillVoucherLocalCache.put(voucherId, seckillVoucherFullModel);
+            return seckillVoucherFullModel;
         }
         log.info("查询秒杀优惠券 从Redis缓存没有查询到 秒杀优惠券的优惠券id : {}",voucherId);
         // 通过布隆过滤器判断是否存在
@@ -91,13 +99,14 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
                 throw new RuntimeException("查询商铺不存在");
             }
             // 再次从缓存中获取商铺信息，通过此步骤可以避免大量请求在获取锁后，直接击穿缓存访问数据库
-            seckillVoucher = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId), SeckillVoucher.class);
+            seckillVoucherFullModel = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId), 
+                    SeckillVoucherFullModel.class);
             // 如果缓存中存在就直接返回
-            if (Objects.nonNull(seckillVoucher)) {
-                return seckillVoucher;
+            if (Objects.nonNull(seckillVoucherFullModel)) {
+                return seckillVoucherFullModel;
             }
             // 如果缓存还不存在，查询数据库
-            seckillVoucher = lambdaQuery().eq(SeckillVoucher::getVoucherId,voucherId).one();
+            SeckillVoucher seckillVoucher = lambdaQuery().eq(SeckillVoucher::getVoucherId,voucherId).one();
             // 如果从数据库查询是空的，将空值写入redis
             if (Objects.isNull(seckillVoucher)) {
                 redisCache.set(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_NULL_TAG_KEY, voucherId),
@@ -118,17 +127,21 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
                     ttlSeconds,
                     TimeUnit.SECONDS
             );
+            Voucher voucher = voucherService.lambdaQuery().eq(Voucher::getId, voucherId).one();
             // 保存秒杀优惠券详情到Redis中（单槽位Hash Tag键）
-            seckillVoucher.setStock(null);
+            seckillVoucherFullModel = new SeckillVoucherFullModel();
+            BeanUtils.copyProperties(seckillVoucher, seckillVoucherFullModel);
+            seckillVoucherFullModel.setStatus(voucher.getStatus());
+            seckillVoucherFullModel.setStock(null);
             redisCache.set(
                     RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
-                    seckillVoucher,
+                    seckillVoucherFullModel,
                     ttlSeconds,
                     TimeUnit.SECONDS
             );
             // 同步写入本地缓存
-            seckillVoucherLocalCache.put(voucherId, seckillVoucher);
-            return seckillVoucher;
+            seckillVoucherLocalCache.put(voucherId, seckillVoucherFullModel);
+            return seckillVoucherFullModel;
         }finally {
             lock.unlock();
         }

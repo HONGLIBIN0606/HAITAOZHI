@@ -1,7 +1,5 @@
-package org.javaup.entity;
+package org.javaup.model;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -12,14 +10,13 @@ import java.time.LocalDateTime;
 
 /**
  * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
- * @description: 秒杀优惠券表，与优惠券是一对一关系
+ * @description: 秒杀优惠券的全部信息
  * @author: 阿星不是程序员
  **/
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
-@TableName("tb_seckill_voucher")
-public class SeckillVoucher implements Serializable {
+public class SeckillVoucherFullModel implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -27,7 +24,6 @@ public class SeckillVoucher implements Serializable {
     /**
      * 主键
      */
-    @TableId(value = "id")
     private Long id;
     
     /**
@@ -69,11 +65,11 @@ public class SeckillVoucher implements Serializable {
      * 失效时间
      */
     private LocalDateTime endTime;
-
+    
     /**
-     * 更新时间
+     * 优惠券状态 1,上架; 2,下架; 3,过期
      */
-    private LocalDateTime updateTime;
+    private Integer status;
 
 
 }
