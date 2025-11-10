@@ -1,6 +1,8 @@
 package org.javaup.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Delete;
 import org.javaup.entity.VoucherOrderRouter;
 
@@ -18,4 +20,13 @@ public interface VoucherOrderRouterMapper extends BaseMapper<VoucherOrderRouter>
      */
     @Delete("DELETE FROM tb_voucher_order_router where order_id = #{orderId}")
     Integer deleteVoucherOrderRouter(Long orderId);
+
+    /**
+     * 查询最近days天购买次数最多的用户ID列表（全局Top-N）。
+     * 使用ShardingSphere进行跨分片聚合。
+     */
+    @Select("SELECT user_id FROM tb_voucher_order_router " +
+            "WHERE create_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY) " +
+            "GROUP BY user_id ORDER BY COUNT(1) DESC LIMIT #{limit}")
+    java.util.List<Long> findTopBuyerUserIds(@Param("limit") int limit, @Param("days") int days);
 }

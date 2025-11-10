@@ -109,6 +109,11 @@
             <version>${revision}</version>
         </dependency>
         <dependency>
+            <groupId>org.javaup</groupId>
+            <artifactId>hmdp-service-delay-queue-framework</artifactId>
+            <version>${revision}</version>
+        </dependency>
+        <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
         </dependency>

@@ -3,11 +3,15 @@ package org.javaup.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.javaup.cache.SeckillVoucherCacheInvalidationPublisher;
+import org.javaup.context.DelayQueueContext;
 import org.javaup.core.RedisKeyManage;
+import org.javaup.core.SpringUtil;
+import org.javaup.delay.message.DelayedVoucherReminderMessage;
 import org.javaup.dto.Result;
 import org.javaup.dto.SeckillVoucherDto;
 import org.javaup.dto.UpdateSeckillVoucherDto;
@@ -32,16 +36,19 @@ import org.javaup.servicelock.annotion.ServiceLock;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.utils.UserHolder;
 import org.javaup.vo.GetSubscribeStatusVo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.javaup.constant.Constant.BLOOM_FILTER_HANDLER_VOUCHER;
+import static org.javaup.constant.Constant.DELAY_VOUCHER_REMINDER;
 import static org.javaup.constant.DistributedLockConstants.UPDATE_SECKILL_VOUCHER_LOCK;
 import static org.javaup.utils.RedisConstants.SECKILL_STOCK_KEY;
 
@@ -56,16 +63,27 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
     @Resource
     private ISeckillVoucherService seckillVoucherService;
+    
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
+    
     @Resource
     private BloomFilterHandlerFactory bloomFilterHandlerFactory;
+    
     @Resource
     private RedisCache redisCache;
+    
     @Resource
     private SeckillVoucherCacheInvalidationPublisher seckillVoucherCacheInvalidationPublisher;
+    
+    @Resource
+    private DelayQueueContext delayQueueContext;
+
+    @Value("${seckill.reminder.ahead.seconds:120}")
+    private long reminderAheadSeconds;
     
     @Override
     public Long addVoucher(VoucherDto voucherDto) {
@@ -460,6 +478,37 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 ttlSeconds,
                 TimeUnit.SECONDS
         );
+        // 延迟提醒
+        sendDelayedVoucherReminder(seckillVoucher);
         return voucherId;
+    }
+    
+    public void sendDelayedVoucherReminder(SeckillVoucher seckillVoucher){
+        LocalDateTime beginTime = seckillVoucher.getBeginTime();
+        if (beginTime == null) {
+            log.warn("[DELAY_REMINDER] beginTime为空，跳过调度 voucherId={}", seckillVoucher.getVoucherId());
+            return;
+        }
+        long secondsUntilBegin = Math.max(
+                LocalDateTimeUtil.between(LocalDateTimeUtil.now(), beginTime).getSeconds(),
+                0L
+        );
+        long delaySeconds = secondsUntilBegin - Math.max(reminderAheadSeconds, 0L);
+        if (delaySeconds <= 0) {
+            log.info("[DELAY_REMINDER] beginTime过近或已开始，不进行延迟调度 voucherId={} beginTime={} delaySeconds={}",
+                    seckillVoucher.getVoucherId(), beginTime, delaySeconds);
+            return;
+        }
+
+        // 构建提醒消息内容（JSON字符串）
+        DelayedVoucherReminderMessage msg = new DelayedVoucherReminderMessage(
+                seckillVoucher.getVoucherId(),
+                beginTime
+        );
+        String content = JSON.toJSONString(msg);
+
+        String topic = SpringUtil.getPrefixDistinctionName() + "-" + DELAY_VOUCHER_REMINDER;
+        delayQueueContext.sendMessage(topic, content, delaySeconds, TimeUnit.SECONDS);
+        log.info("[DELAY_REMINDER] 已调度提醒消息 voucherId={} delaySeconds={} topic={}", seckillVoucher.getVoucherId(), delaySeconds, topic);
     }
 }

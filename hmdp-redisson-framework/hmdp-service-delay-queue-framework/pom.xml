@@ -10,7 +10,7 @@
     </parent>
     
     <artifactId>hmdp-service-delay-queue-framework</artifactId>
-    <name>hmdp-delay-queue-framework</name>
+    <name>hmdp-service-delay-queue-framework</name>
     <description>延迟队列</description>
 
     <dependencies>

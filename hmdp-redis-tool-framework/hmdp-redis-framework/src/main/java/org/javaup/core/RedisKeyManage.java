@@ -103,6 +103,12 @@ public enum RedisKeyManage {
     SECKILL_AUTO_ISSUE_NOTIFY_DEDUP_KEY("seckill:autoissue:notify:dedup:{%s}:%s","秒杀券id（同槽位HashTag）与用户id","value为1","k"),
 
     /**
+     * 开抢提醒通知的去重键（带HashTag，voucherId在同槽位）
+     * member 维度包含 voucherId 与 userId，避免重复提醒
+     */
+    SECKILL_REMINDER_NOTIFY_DEDUP_KEY("seckill:reminder:notify:dedup:{%s}:%s","秒杀券id（同槽位HashTag）与用户id","value为1","k"),
+
+    /**
      * 秒杀访问令牌键（带HashTag，voucherId在同槽位；第二占位为userId）
      */
     SECKILL_ACCESS_TOKEN_TAG_KEY("seckill:access:token:{%s}:%s","秒杀券id（同槽位HashTag）与用户id","访问令牌","k"),

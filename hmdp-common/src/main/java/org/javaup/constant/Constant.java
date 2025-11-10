@@ -23,4 +23,9 @@ public class Constant {
     public static final String BLOOM_FILTER_HANDLER_SHOP = "shop";
     
     public static final String BLOOM_FILTER_HANDLER_VOUCHER = "voucher";
+    
+    /**
+     * 延迟提醒
+     * */
+    public static final String DELAY_VOUCHER_REMINDER ="h_delay_voucher_reminder";
 }
