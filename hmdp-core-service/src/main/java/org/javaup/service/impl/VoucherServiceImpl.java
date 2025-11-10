@@ -165,6 +165,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
 
         // 更新后清理缓存，等待读路径按新数据重建缓存
         if (updatedVoucher || updatedSeckill) {
+            voucherUpdate.update();
+            seckillUpdate.update();
             seckillVoucherCacheInvalidationPublisher.publishInvalidate(voucherId, "update");
         }
     }
