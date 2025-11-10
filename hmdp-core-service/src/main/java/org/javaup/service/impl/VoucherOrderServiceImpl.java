@@ -8,6 +8,7 @@ import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.javaup.core.RedisKeyManage;
@@ -67,9 +68,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.javaup.constant.Constant.SECKILL_VOUCHER_TOPIC;
@@ -135,13 +138,56 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         SECKILL_SCRIPT.setResultType(Long.class);
     }
 
-    private static final ExecutorService SECKILL_ORDER_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final ThreadPoolExecutor SECKILL_ORDER_EXECUTOR =
+            new ThreadPoolExecutor(
+                    1,
+                    1,
+                    0L,
+                    TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(1024),
+                    new NamedThreadFactory("seckill-order-", false),
+                    new ThreadPoolExecutor.CallerRunsPolicy()
+            );
+
+    private static class NamedThreadFactory implements ThreadFactory {
+        private final String namePrefix;
+        private final boolean daemon;
+        private final AtomicInteger index = new AtomicInteger(1);
+
+        public NamedThreadFactory(String namePrefix, boolean daemon) {
+            this.namePrefix = namePrefix;
+            this.daemon = daemon;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, namePrefix + index.getAndIncrement());
+            t.setDaemon(daemon);
+            t.setUncaughtExceptionHandler((thread, ex) ->
+                    log.error("未捕获异常，线程={}, err={}", thread.getName(), ex.getMessage(), ex)
+            );
+            return t;
+        }
+    }
     
     
     @PostConstruct
     private void init(){
         // 这是黑马点评的普通版本，升级版本中不再使用此方式
         //SECKILL_ORDER_EXECUTOR.submit(new VoucherOrderHandler());
+    }
+
+    @PreDestroy
+    private void destroy(){
+        try {
+            SECKILL_ORDER_EXECUTOR.shutdown();
+            if (!SECKILL_ORDER_EXECUTOR.awaitTermination(5, TimeUnit.SECONDS)) {
+                SECKILL_ORDER_EXECUTOR.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            SECKILL_ORDER_EXECUTOR.shutdownNow();
+        }
     }
 
     private class VoucherOrderHandler implements Runnable{
