@@ -70,6 +70,10 @@ public class SeckillVoucherFullModel implements Serializable {
      * 优惠券状态 1,上架; 2,下架; 3,过期
      */
     private Integer status;
-
+    
+    /**
+     * 商铺id
+     */
+    private Long shopId;
 
 }

@@ -22,11 +22,14 @@ public interface VoucherOrderRouterMapper extends BaseMapper<VoucherOrderRouter>
     Integer deleteVoucherOrderRouter(Long orderId);
 
     /**
-     * 查询最近days天购买次数最多的用户ID列表（全局Top-N）。
-     * 使用ShardingSphere进行跨分片聚合。
+     * 查询指定店铺最近days天购买次数最多的用户ID列表（按店铺Top-N）。
+     * 通过voucher_id关联到tb_voucher的shop_id进行过滤。
      */
-    @Select("SELECT user_id FROM tb_voucher_order_router " +
-            "WHERE create_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY) " +
-            "GROUP BY user_id ORDER BY COUNT(1) DESC LIMIT #{limit}")
-    java.util.List<Long> findTopBuyerUserIds(@Param("limit") int limit, @Param("days") int days);
+    @Select("SELECT vor.user_id FROM tb_voucher_order_router vor " +
+            "JOIN tb_voucher v ON v.id = vor.voucher_id " +
+            "WHERE v.shop_id = #{shopId} AND vor.create_time >= DATE_SUB(NOW(), INTERVAL #{days} DAY) " +
+            "GROUP BY vor.user_id ORDER BY COUNT(1) DESC LIMIT #{limit}")
+    java.util.List<Long> findTopBuyerUserIdsByShop(@Param("shopId") Long shopId,
+                                                  @Param("limit") int limit,
+                                                  @Param("days") int days);
 }

@@ -124,6 +124,8 @@ public class ConsumerDelayedVoucherReminder implements ConsumerTask {
     private Set<String> buildAudienceUserIds(SeckillVoucherFullModel voucherFull) {
         String allowedLevelsStr = voucherFull.getAllowedLevels();
         Integer minLevel = voucherFull.getMinLevel();
+        // 商铺id（用于Top买家统计按店铺过滤）
+        Long shopId = voucherFull.getShopId();
         List<UserInfo> userInfos;
         if (StrUtil.isNotBlank(allowedLevelsStr)) {
             Set<Integer> allowed = new HashSet<>();
@@ -171,14 +173,14 @@ public class ConsumerDelayedVoucherReminder implements ConsumerTask {
         }
         if (topBuyersEnabled) {
             try {
-                List<Long> topBuyerIds = voucherOrderRouterMapper.findTopBuyerUserIds(topBuyersCount, topBuyersDays);
-                if (topBuyerIds != null) {
-                    for (Long uid : topBuyerIds) {
-                        if (uid != null) { userIds.add(String.valueOf(uid)); }
+                List<Long> topBuyerIds = voucherOrderRouterMapper.findTopBuyerUserIdsByShop(shopId, topBuyersCount, topBuyersDays);
+                for (Long uid : topBuyerIds) {
+                    if (uid != null) { 
+                        userIds.add(String.valueOf(uid)); 
                     }
                 }
             } catch (Exception ex) {
-                log.warn("[DELAY_REMINDER_CONSUMER] 查询Top购买用户失败, days={}, count={}, ex={}", topBuyersDays, topBuyersCount, ex.getMessage());
+                log.warn("[DELAY_REMINDER_CONSUMER] 查询店铺Top购买用户失败, shopId={}, days={}, count={}, ex={}", shopId, topBuyersDays, topBuyersCount, ex.getMessage());
             }
         }
         return userIds;

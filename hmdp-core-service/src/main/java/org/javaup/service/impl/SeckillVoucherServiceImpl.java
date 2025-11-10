@@ -131,6 +131,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             // 保存秒杀优惠券详情到Redis中（单槽位Hash Tag键）
             seckillVoucherFullModel = new SeckillVoucherFullModel();
             BeanUtils.copyProperties(seckillVoucher, seckillVoucherFullModel);
+            seckillVoucherFullModel.setShopId(voucher.getShopId());
             seckillVoucherFullModel.setStatus(voucher.getStatus());
             seckillVoucherFullModel.setStock(null);
             redisCache.set(
