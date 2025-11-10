@@ -5,8 +5,9 @@ import org.javaup.dto.CancelVoucherOrderDto;
 import org.javaup.dto.GetVoucherOrderByVoucherIdDto;
 import org.javaup.dto.GetVoucherOrderDto;
 import org.javaup.dto.Result;
-import org.javaup.dto.VoucherOrderDto;
 import org.javaup.entity.VoucherOrder;
+import org.javaup.kafka.message.SeckillVoucherMessage;
+import org.javaup.message.MessageExtend;
 
 /**
  * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
@@ -19,7 +20,7 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     void createVoucherOrderV1(VoucherOrder voucherOrder);
     
-    boolean createVoucherOrderV2(VoucherOrderDto voucherOrderDto);
+    boolean createVoucherOrderV2(MessageExtend<SeckillVoucherMessage> message);
     
     Long getSeckillVoucherOrder(GetVoucherOrderDto getVoucherOrderDto);
     

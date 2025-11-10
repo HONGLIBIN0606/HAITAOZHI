@@ -3,8 +3,6 @@ package org.javaup.kafka.consumer;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.javaup.consumer.AbstractConsumerHandler;
-import org.javaup.dto.VoucherOrderDto;
-import org.javaup.entity.VoucherReconcileLog;
 import org.javaup.enums.BusinessType;
 import org.javaup.enums.LogType;
 import org.javaup.enums.SeckillVoucherOrderOperate;
@@ -88,11 +86,12 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         consumeRaw(value, key, headers);
     }
     
-    @Override
+   
     /**
      * 消费前置过滤：若消息延迟超过阈值则丢弃并回滚，同时记录对账日志。
      * 返回 true 继续消费；返回 false 中断后续消费流程。
      */
+    @Override
     protected Boolean beforeConsume(MessageExtend<SeckillVoucherMessage> message) {
         long producerTimeTimestamp = message.getProducerTime().getTime();
         long delayTime = System.currentTimeMillis() - producerTimeTimestamp;
@@ -115,7 +114,7 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
             );
             // 对账日志：异常-消息延迟丢弃
             try {
-                saveReconcileLog(LogType.RESTORE, 
+                voucherReconcileLogService.saveReconcileLog(LogType.RESTORE, 
                         BusinessType.TIMEOUT.getCode(), 
                         "message delayed " + delayTime + "ms, rollback redis", 
                         message);
@@ -127,19 +126,22 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         return true;
     }
     
-    @Override
+    
     /**
      * 核心消费：尝试创建订单，若出现幂等冲突(DuplicateKeyException)则执行回滚。
      */
+    @Override
     protected void doConsume(MessageExtend<SeckillVoucherMessage> message) {
-        SeckillVoucherMessage messageBody = message.getMessageBody();
-        VoucherOrderDto voucherOrderDto = new VoucherOrderDto();
-        voucherOrderDto.setId(messageBody.getOrderId());
-        voucherOrderDto.setUserId(messageBody.getUserId());
-        voucherOrderDto.setVoucherId(messageBody.getVoucherId());
-        voucherOrderDto.setMessageId(message.getUuid());
-        voucherOrderDto.setAutoIssue(messageBody.getAutoIssue());
-        voucherOrderService.createVoucherOrderV2(voucherOrderDto);
+        voucherOrderService.createVoucherOrderV2(message);
+    }
+    
+    /**
+     * 成功后处理：统计用户购买
+     */
+    @Override
+    protected void afterConsumeSuccess(MessageExtend<SeckillVoucherMessage> message) {
+        super.afterConsumeSuccess(message);
+        //在这里统计用户购买
     }
     
     /**
@@ -164,7 +166,7 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         // 对账日志：异常-消费失败
         try {
             String detail = throwable == null ? "consume failed" : ("consume failed: " + throwable.getMessage());
-            saveReconcileLog(LogType.RESTORE,
+            voucherReconcileLogService.saveReconcileLog(LogType.RESTORE,
                     BusinessType.FAIL.getCode(), 
                     detail, 
                     message
@@ -172,54 +174,5 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
         } catch (Exception e) {
             log.warn("保存对账日志失败(消费失败)", e);
         }
-    }
-    
-    @Override
-    /**
-     * 成功后处理：消费成功记录对账日志（扣减一致）。
-     */
-    protected void afterConsumeSuccess(MessageExtend<SeckillVoucherMessage> message) {
-        super.afterConsumeSuccess(message);
-        // 对账日志：一致-消费成功
-        try {
-            saveReconcileLog(LogType.DEDUCT,
-                    BusinessType.SUCCESS.getCode(), 
-                    "order created", 
-                    message
-            );
-        } catch (Exception e) {
-            log.warn("保存对账日志失败(消费成功)", e);
-        }
-    }
-    
-    /**
-     * 构建并保存对账日志：根据日志类型设置数量字段，记录业务过程数据。
-     */
-    private void saveReconcileLog(LogType logType,
-                                  Integer businessType, 
-                                  String detail, 
-                                  MessageExtend<SeckillVoucherMessage> message) {
-        SeckillVoucherMessage body = message.getMessageBody();
-        VoucherReconcileLog logEntity = new VoucherReconcileLog();
-        logEntity.setId(snowflakeIdGenerator.nextId())
-                .setOrderId(body.getOrderId())
-                .setUserId(body.getUserId())
-                .setVoucherId(body.getVoucherId())
-                .setMessageId(message.getUuid())
-                .setBusinessType(businessType)
-                .setDetail(detail)
-                .setTraceId(body.getTraceId())
-                .setLogType(logType.getCode())
-                .setCreateTime(java.time.LocalDateTime.now())
-                .setUpdateTime(java.time.LocalDateTime.now())
-                .setBeforeQty(body.getBeforeQty())
-                .setChangeQty(body.getChangeQty())
-                .setAfterQty(body.getAfterQty())
-                .setTraceId(body.getTraceId());
-        if (logType == LogType.RESTORE) {
-            logEntity.setBeforeQty(body.getAfterQty());
-            logEntity.setAfterQty(body.getBeforeQty());
-        }
-        voucherReconcileLogService.save(logEntity);
     }
 }

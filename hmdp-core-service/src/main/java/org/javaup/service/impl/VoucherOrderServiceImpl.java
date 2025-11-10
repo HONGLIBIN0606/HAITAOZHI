@@ -17,11 +17,11 @@ import org.javaup.dto.CancelVoucherOrderDto;
 import org.javaup.dto.GetVoucherOrderByVoucherIdDto;
 import org.javaup.dto.GetVoucherOrderDto;
 import org.javaup.dto.Result;
-import org.javaup.dto.VoucherOrderDto;
 import org.javaup.entity.UserInfo;
 import org.javaup.entity.VoucherOrder;
 import org.javaup.entity.VoucherOrderRouter;
 import org.javaup.enums.BaseCode;
+import org.javaup.enums.BusinessType;
 import org.javaup.enums.LogType;
 import org.javaup.enums.SeckillVoucherOrderOperate;
 import org.javaup.exception.HmdpFrameException;
@@ -32,6 +32,7 @@ import org.javaup.lua.SeckillVoucherDomain;
 import org.javaup.lua.SeckillVoucherOperate;
 import org.javaup.mapper.VoucherOrderMapper;
 import org.javaup.mapper.VoucherOrderRouterMapper;
+import org.javaup.message.MessageExtend;
 import org.javaup.model.SeckillVoucherFullModel;
 import org.javaup.redis.RedisCacheImpl;
 import org.javaup.redis.RedisKeyBuild;
@@ -41,13 +42,13 @@ import org.javaup.service.ISeckillVoucherService;
 import org.javaup.service.IUserInfoService;
 import org.javaup.service.IVoucherOrderRouterService;
 import org.javaup.service.IVoucherOrderService;
+import org.javaup.service.IVoucherReconcileLogService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.javaup.utils.RedisIdWorker;
 import org.javaup.utils.UserHolder;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.aop.framework.AopContext;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -128,6 +129,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
 
     @Resource
     private IAutoIssueNotifyService autoIssueNotifyService;
+    
+    @Resource
+    private IVoucherReconcileLogService voucherReconcileLogService;
     
 
     private static final DefaultRedisScript<Long> SECKILL_SCRIPT;
@@ -466,26 +470,29 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     
     
     @Override
-    @RepeatExecuteLimit(name = SECKILL_VOUCHER_ORDER,keys = {"#voucherOrderDto.messageId"})
+    @RepeatExecuteLimit(name = SECKILL_VOUCHER_ORDER,keys = {"#message.uuid"})
     @Transactional(rollbackFor = Exception.class)
-    public boolean createVoucherOrderV2(VoucherOrderDto voucherOrderDto) {
-        Long userId = voucherOrderDto.getUserId();
+    public boolean createVoucherOrderV2(MessageExtend<SeckillVoucherMessage> message) {
+        SeckillVoucherMessage messageBody = message.getMessageBody();
+        Long userId = messageBody.getUserId();
 
         // 扣减库存
         boolean success = seckillVoucherService.update()
                 // set stock = stock - 1
                 .setSql("stock = stock - 1")
                 // where id = ? and stock > 0
-                .eq("voucher_id", voucherOrderDto.getVoucherId())
+                .eq("voucher_id", messageBody.getVoucherId())
                 .gt("stock", 0)
                 .update();
         if (!success) {
             // 扣减失败：触发消息侧回滚Redis数据
-            throw new HmdpFrameException("优惠券库存不足！优惠券id:" + voucherOrderDto.getVoucherId());
+            throw new HmdpFrameException("优惠券库存不足！优惠券id:" + messageBody.getVoucherId());
         }
         // 创建订单
         VoucherOrder voucherOrder = new VoucherOrder();
-        BeanUtils.copyProperties(voucherOrderDto, voucherOrder);
+        voucherOrder.setId(messageBody.getOrderId());
+        voucherOrder.setUserId(messageBody.getUserId());
+        voucherOrder.setVoucherId(messageBody.getVoucherId());
         voucherOrder.setCreateTime(LocalDateTimeUtil.now());
         save(voucherOrder);
         VoucherOrderRouter voucherOrderRouter = new VoucherOrderRouter();
@@ -498,23 +505,30 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         voucherOrderRouterService.save(voucherOrderRouter);
         // 订单存放到redis
         redisCache.set(RedisKeyBuild.createRedisKey(
-                RedisKeyManage.DB_SECKILL_ORDER_KEY,voucherOrderDto.getId()),
+                RedisKeyManage.DB_SECKILL_ORDER_KEY,messageBody.getOrderId()),
                 voucherOrder,
                 60, 
                 TimeUnit.SECONDS
         );
+        // 对账日志：一致-消费成功
+        voucherReconcileLogService.saveReconcileLog(LogType.DEDUCT,
+                BusinessType.SUCCESS.getCode(),
+                "order created",
+                message
+        );
+        //TODO 改成线程池执行
         // 订单创建成功后，清理该用户在订阅ZSET中的排队位置（避免后续重复分配）
         try {
             RedisKeyBuild subscribeZSetKey = RedisKeyBuild.createRedisKey(
                     RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY,
-                    voucherOrderDto.getVoucherId()
+                    messageBody.getVoucherId()
             );
             redisCache.delForSortedSet(subscribeZSetKey, String.valueOf(userId));
         } catch (Exception e) {
-            log.warn("清理订阅ZSET成员失败，voucherId={}, userId={}, err={}", voucherOrderDto.getVoucherId(), userId, e.getMessage());
+            log.warn("清理订阅ZSET成员失败，voucherId={}, userId={}, err={}", messageBody.getVoucherId(), userId, e.getMessage());
         }
         // 自动发券场景：发送用户通知（短信/APP）并做去重
-        if (Boolean.TRUE.equals(voucherOrderDto.getAutoIssue())) {
+        if (Boolean.TRUE.equals(messageBody.getAutoIssue())) {
             try {
                 autoIssueNotifyService.sendAutoIssueNotify(voucherOrder.getVoucherId(), userId, voucherOrder.getId());
             } catch (Exception e) {
