@@ -580,7 +580,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             redisCache.delForHash(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, 
                     cancelVoucherOrderDto.getVoucherId()),
                     String.valueOf(voucherOrder.getUserId()));
-            // 将自己移出每日Top买家统计的hash集合
+            // 将自己在每日Top买家统计的zset中减1
             Voucher voucher = voucherService.getById(voucherOrder.getVoucherId());
             if (Objects.nonNull(voucher)) {
                 String day = voucherOrder.getCreateTime().format(DateTimeFormatter.BASIC_ISO_DATE);
@@ -589,7 +589,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                         voucher.getShopId(),
                         day
                 );
-                redisCache.delForHash(dailyKey, String.valueOf(voucherOrder.getUserId()));
+                redisCache.incrementScoreForSortedSet(dailyKey, String.valueOf(voucherOrder.getUserId()), -1.0);
             }
             
             // 回滚成功后，尝试将资格自动分配给订阅队列中最早的未购用户
