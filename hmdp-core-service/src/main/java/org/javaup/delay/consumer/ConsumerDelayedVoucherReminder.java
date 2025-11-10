@@ -128,116 +128,117 @@ public class ConsumerDelayedVoucherReminder implements ConsumerTask {
     private Set<String> buildAudienceUserIds(SeckillVoucherFullModel voucherFull) {
         String allowedLevelsStr = voucherFull.getAllowedLevels();
         Integer minLevel = voucherFull.getMinLevel();
-        // 商铺id（用于Top买家统计按店铺过滤）
         Long shopId = voucherFull.getShopId();
-        List<UserInfo> userInfos;
-        if (StrUtil.isNotBlank(allowedLevelsStr)) {
-            Set<Integer> allowed = new HashSet<>();
-            try {
-                for (String s : allowedLevelsStr.split(",")) {
-                    if (StrUtil.isNotBlank(s)) {
-                        allowed.add(Integer.valueOf(s.trim()));
-                    }
+        List<UserInfo> userInfos = queryEligibleUserInfos(allowedLevelsStr, minLevel);
+        Set<String> userIds = toUserIdSet(userInfos);
+        if (topBuyersEnabled && Objects.nonNull(shopId)) {
+            for (Long uid : readTopBuyersFromRedis(shopId, topBuyersCount, topBuyersDays)) {
+                if (uid != null) { 
+                    userIds.add(String.valueOf(uid)); 
                 }
-            } catch (Exception ignore) { }
+            }
+        } else if (topBuyersEnabled) {
+            log.warn("[DELAY_REMINDER_CONSUMER] 店铺ID为空，跳过Top买家统计");
+        }
+        return userIds;
+    }
+
+    private List<UserInfo> queryEligibleUserInfos(String allowedLevelsStr, Integer minLevel) {
+        if (StrUtil.isNotBlank(allowedLevelsStr)) {
+            Set<Integer> allowed = parseAllowedLevels(allowedLevelsStr);
             if (CollectionUtil.isNotEmpty(allowed)) {
-                userInfos = userInfoService.lambdaQuery()
+                return userInfoService.lambdaQuery()
                         .select(UserInfo::getUserId, UserInfo::getLevel)
                         .in(UserInfo::getLevel, allowed)
                         .last("limit " + maxNotifyUsers)
                         .list();
-            } else {
-                int useMin = Objects.nonNull(minLevel) ? minLevel : defaultMinLevel;
-                userInfos = userInfoService.lambdaQuery()
-                        .select(UserInfo::getUserId, UserInfo::getLevel)
-                        .ge(UserInfo::getLevel, useMin)
-                        .last("limit " + maxNotifyUsers)
-                        .list();
             }
-        } else if (Objects.nonNull(minLevel)) {
-            userInfos = userInfoService.lambdaQuery()
+            int useMin = Objects.nonNull(minLevel) ? minLevel : defaultMinLevel;
+            return userInfoService.lambdaQuery()
+                    .select(UserInfo::getUserId, UserInfo::getLevel)
+                    .ge(UserInfo::getLevel, useMin)
+                    .last("limit " + maxNotifyUsers)
+                    .list();
+        }
+        if (Objects.nonNull(minLevel)) {
+            return userInfoService.lambdaQuery()
                     .select(UserInfo::getUserId, UserInfo::getLevel)
                     .ge(UserInfo::getLevel, minLevel)
                     .last("limit " + maxNotifyUsers)
                     .list();
-        } else {
-            userInfos = userInfoService.lambdaQuery()
-                    .select(UserInfo::getUserId, UserInfo::getLevel)
-                    .ge(UserInfo::getLevel, defaultMinLevel)
-                    .last("limit " + maxNotifyUsers)
-                    .list();
         }
-        Set<String> userIds = new LinkedHashSet<>();
-        if (CollectionUtil.isNotEmpty(userInfos)) {
-            for (UserInfo ui : userInfos) {
-                if (Objects.nonNull(ui) && Objects.nonNull(ui.getUserId())) {
-                    userIds.add(String.valueOf(ui.getUserId()));
-                }
+        return userInfoService.lambdaQuery()
+                .select(UserInfo::getUserId, UserInfo::getLevel)
+                .ge(UserInfo::getLevel, defaultMinLevel)
+                .last("limit " + maxNotifyUsers)
+                .list();
+    }
+
+    private Set<Integer> parseAllowedLevels(String allowedLevelsStr) {
+        Set<Integer> allowed = new HashSet<>();
+        if (StrUtil.isBlank(allowedLevelsStr)) { return allowed; }
+        String[] parts = allowedLevelsStr.split(",");
+        for (String s : parts) {
+            if (StrUtil.isNotBlank(s)) {
+                try { allowed.add(Integer.valueOf(s.trim())); } catch (Exception ignore) {}
             }
         }
-        if (topBuyersEnabled) {
-            try {
-                // 收集最近N天的每日ZSET键
-                LocalDate today = LocalDate.now();
-                // yyyyMMdd
-                DateTimeFormatter fmt = DateTimeFormatter.BASIC_ISO_DATE;
-                List<RedisKeyBuild> dailyKeys = new ArrayList<>();
-                for (int i = 0; i < Math.max(topBuyersDays, 1); i++) {
-                    String day = today.minusDays(i).format(fmt);
-                    dailyKeys.add(RedisKeyBuild.createRedisKey(
-                            RedisKeyManage.SECKILL_SHOP_TOP_BUYERS_DAILY_TAG_KEY,
-                            shopId,
-                            day
-                    ));
-                }
-                List<Long> topBuyerIds;
-                if (dailyKeys.isEmpty()) {
-                    topBuyerIds = Collections.emptyList();
-                } else if (dailyKeys.size() == 1) {
-                    // 单日直接读取TopN
-                    Set<Long> topSet = redisCache.getReverseRangeForSortedSet(
-                            dailyKeys.get(0),
-                            0,
-                            Math.max(topBuyersCount - 1, 0),
-                            Long.class
-                    );
-                    topBuyerIds = new ArrayList<>(topSet);
-                } else {
-                    // 多日并集聚合到临时键，再读取TopN
-                    String rangeLabel = today.minusDays(dailyKeys.size() - 1).format(fmt) + "-" + today.format(fmt);
-                    RedisKeyBuild destKey = RedisKeyBuild.createRedisKey(
-                            RedisKeyManage.SECKILL_SHOP_TOP_BUYERS_UNION_TAG_KEY,
-                            shopId,
-                            rangeLabel
-                    );
-                    RedisKeyBuild base = dailyKeys.get(0);
-                    Collection<RedisKeyBuild> others = dailyKeys.subList(1, dailyKeys.size());
-                    try {
-                        redisCache.unionAndStoreForSortedSet(base, others, destKey);
-                        // 临时键设置短TTL，避免长期占用空间
-                        redisCache.expire(destKey, 60, TimeUnit.SECONDS);
-                    } catch (Exception e) {
-                        log.warn("[DELAY_REMINDER_CONSUMER] ZSET并集失败 shopId={} range={}", shopId, rangeLabel, e);
-                    }
-                    Set<Long> topSet = redisCache.getReverseRangeForSortedSet(
-                            destKey,
-                            0,
-                            Math.max(topBuyersCount - 1, 0),
-                            Long.class
-                    );
-                    topBuyerIds = new ArrayList<>(topSet);
-                }
-                for (Long uid : topBuyerIds) {
-                    if (Objects.nonNull(uid)) {
-                        userIds.add(String.valueOf(uid));
-                    }
-                }
-            } catch (Exception ex) {
-                log.warn("[DELAY_REMINDER_CONSUMER] 从Redis读取店铺Top买家失败 shopId={} days={} count={} ex={}",
-                        shopId, topBuyersDays, topBuyersCount, ex.getMessage());
+        return allowed;
+    }
+
+    private Set<String> toUserIdSet(List<UserInfo> userInfos) {
+        Set<String> userIds = new LinkedHashSet<>();
+        if (CollectionUtil.isEmpty(userInfos)) { return userIds; }
+        for (UserInfo ui : userInfos) {
+            if (Objects.nonNull(ui) && Objects.nonNull(ui.getUserId())) {
+                userIds.add(String.valueOf(ui.getUserId()));
             }
         }
         return userIds;
+    }
+
+    private List<Long> readTopBuyersFromRedis(Long shopId, int count, int days) {
+        try {
+            LocalDate today = LocalDate.now();
+            DateTimeFormatter fmt = DateTimeFormatter.BASIC_ISO_DATE;
+            List<RedisKeyBuild> dailyKeys = new ArrayList<>();
+            for (int i = 0; i < Math.max(days, 1); i++) {
+                String day = today.minusDays(i).format(fmt);
+                dailyKeys.add(RedisKeyBuild.createRedisKey(
+                        RedisKeyManage.SECKILL_SHOP_TOP_BUYERS_DAILY_TAG_KEY,
+                        shopId,
+                        day
+                ));
+            }
+            if (dailyKeys.isEmpty()) { 
+                return Collections.emptyList(); 
+            }
+            if (dailyKeys.size() == 1) {
+                Set<Long> topSet = redisCache.getReverseRangeForSortedSet(
+                        dailyKeys.get(0), 0, Math.max(count - 1, 0), Long.class);
+                return new ArrayList<>(topSet);
+            }
+            String rangeLabel = today.minusDays(dailyKeys.size() - 1).format(fmt) + "-" + today.format(fmt);
+            RedisKeyBuild destKey = RedisKeyBuild.createRedisKey(
+                    RedisKeyManage.SECKILL_SHOP_TOP_BUYERS_UNION_TAG_KEY,
+                    shopId,
+                    rangeLabel
+            );
+            RedisKeyBuild base = dailyKeys.get(0);
+            Collection<RedisKeyBuild> others = dailyKeys.subList(1, dailyKeys.size());
+            try {
+                redisCache.unionAndStoreForSortedSet(base, others, destKey);
+                redisCache.expire(destKey, 60, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                log.warn("[DELAY_REMINDER_CONSUMER] ZSET并集失败 shopId={} range={}", shopId, rangeLabel, e);
+            }
+            Set<Long> topSet = redisCache.getReverseRangeForSortedSet(destKey, 0, Math.max(count - 1, 0), Long.class);
+            return new ArrayList<>(topSet);
+        } catch (Exception ex) {
+            log.warn("[DELAY_REMINDER_CONSUMER] 读取Redis Top买家失败 shopId={} days={} count={} ex={}",
+                    shopId, days, count, ex.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private int notifyUsers(Long voucherId, java.time.LocalDateTime beginTime, Set<String> userIds) {
