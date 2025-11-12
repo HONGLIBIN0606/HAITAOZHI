@@ -98,7 +98,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             // 再次从缓存中判断是否存在优惠券空值信息，如果有，代表优惠券不存在，直接返回
             existResult = redisCache.hasKey(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_NULL_TAG_KEY, voucherId));
             if (existResult){
-                throw new RuntimeException("查询商铺不存在");
+                throw new RuntimeException("查询优惠券不存在");
             }
             // 再次从缓存中获取优惠券信息，通过此步骤可以避免大量请求在获取锁后，直接击穿缓存访问数据库
             seckillVoucherFullModel = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId), 
