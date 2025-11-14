@@ -87,11 +87,11 @@ rules:
         actualDataNodes: ds_${0..1}.tb_voucher_order_${0..1}
         databaseStrategy:
           standard:
-            shardingColumn: voucher_id
+            shardingColumn: user_id
             shardingAlgorithmName: databaseVoucherOrderModModel
         tableStrategy:
           standard:
-            shardingColumn: user_id
+            shardingColumn: voucher_id
             shardingAlgorithmName: tableVoucherOrderModModel
       tb_voucher_order_router:
         actualDataNodes: ds_${0..1}.tb_voucher_order_router_${0..1}
