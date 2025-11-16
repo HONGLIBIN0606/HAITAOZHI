@@ -39,7 +39,7 @@ public class ServiceLockAutoConfiguration {
     }
     
     @Bean
-    public ServiceLockTool serviceLockUtil(LockInfoHandleFactory lockInfoHandleFactory,ServiceLockFactory serviceLockFactory){
+    public ServiceLockTool serviceLockTooL(LockInfoHandleFactory lockInfoHandleFactory,ServiceLockFactory serviceLockFactory){
         return new ServiceLockTool(lockInfoHandleFactory,serviceLockFactory);
     }
 }
