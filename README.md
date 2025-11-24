@@ -96,11 +96,11 @@
     - 🔹 **Plus 方案：链路埋点、请求画像与异常聚合，关键接口压测与版本对比报告。**
 
 # 三、如何启动项目
-- [准备项目启动条件](https://javaup.chat/damai/getting-started/prerequisites)
-- [如何安装项目需要的中间件环境](https://javaup.chat/damai/getting-started/install-dependencies)
-- [后端项目部署启动](https://javaup.chat/damai/getting-started/backend-deploy)
-- [前端项目部署启动](https://javaup.chat/damai/getting-started/frontend-deploy)
-- [项目文档和视频目录]
+- [准备项目启动条件](https://javaup.chat/hmdp-plus/startup/prerequisites)
+- [如何安装项目需要的中间件环境](https://javaup.chat/hmdp-plus/startup/install-middlewares)
+- [后端项目部署启动](https://javaup.chat/hmdp-plus/startup/backend-deploy)
+- [前端项目部署启动](https://javaup.chat/hmdp-plus/startup/frontend-deploy)
+- [项目文档和视频目录](https://javaup.chat/hmdp-plus/overview/project-change)
   
 # 四、关键问题解决的能力详解
 
