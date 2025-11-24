@@ -100,6 +100,7 @@
 - [如何安装项目需要的中间件环境](https://javaup.chat/damai/getting-started/install-dependencies)
 - [后端项目部署启动](https://javaup.chat/damai/getting-started/backend-deploy)
 - [前端项目部署启动](https://javaup.chat/damai/getting-started/frontend-deploy)
+- [项目文档和视频目录]
   
 # 四、关键问题解决的能力详解
 

@@ -1,23 +1,4 @@
--- MySQL dump 10.13  Distrib 8.4.4, for macos15 (arm64)
---
--- Host: localhost    Database: hmdp_1
--- ------------------------------------------------------
--- Server version	8.4.4
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `tb_blog`
---
+USE hmdp_1;
 
 DROP TABLE IF EXISTS `tb_blog`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -134,7 +115,6 @@ CREATE TABLE `tb_rollback_failure_log` (
 
 LOCK TABLES `tb_rollback_failure_log` WRITE;
 /*!40000 ALTER TABLE `tb_rollback_failure_log` DISABLE KEYS */;
-INSERT INTO `tb_rollback_failure_log` VALUES (1987102900800323586,1,1985281153640185857,1987100802754674689,1987102898019500033,'redis rollback failed after retries: 秒杀优惠券库存不存在',10004,3,'redis_voucher_data','2025-11-08 10:20:25','2025-11-08 10:20:25');
 /*!40000 ALTER TABLE `tb_rollback_failure_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -166,7 +146,7 @@ CREATE TABLE `tb_seckill_voucher_0` (
 
 LOCK TABLES `tb_seckill_voucher_0` WRITE;
 /*!40000 ALTER TABLE `tb_seckill_voucher_0` DISABLE KEYS */;
-INSERT INTO `tb_seckill_voucher_0` VALUES (1987043235650076673,1,200,200,'1',1,'2025-11-08 06:23:19','2025-11-02 13:00:00','2025-12-02 15:59:59','2025-11-11 09:07:16');
+INSERT INTO `tb_seckill_voucher_0` VALUES (1987043235650076673,1,200,200,'1,2',1,'2025-11-08 06:23:19','2025-11-02 13:00:00','2025-12-02 15:59:59','2025-11-20 07:23:03');
 /*!40000 ALTER TABLE `tb_seckill_voucher_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -503,7 +483,7 @@ CREATE TABLE `tb_voucher_0` (
 
 LOCK TABLES `tb_voucher_0` WRITE;
 /*!40000 ALTER TABLE `tb_voucher_0` DISABLE KEYS */;
-INSERT INTO `tb_voucher_0` VALUES (1,1,'80元代金券','周一至周日均可使用','全场通用\\n无需预约\\n可无限叠加\\不兑现、不找零\\n仅限堂食',100,20,1,1,'2025-11-08 06:23:19','2025-11-08 06:23:19');
+INSERT INTO `tb_voucher_0` VALUES (1,1,'80元代金券','周一至周日均可使用','无规则',20,100,1,1,'2025-11-08 06:23:19','2025-11-20 07:23:03');
 /*!40000 ALTER TABLE `tb_voucher_0` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -748,4 +728,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-11 17:08:59
+-- Dump completed on 2025-11-24 10:09:29
