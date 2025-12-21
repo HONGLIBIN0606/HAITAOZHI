@@ -217,6 +217,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 .set(SeckillVoucher::getStock, newStock)
                 .set(SeckillVoucher::getInitStock, newInitStock)
                 .set(SeckillVoucher::getUpdateTime, LocalDateTimeUtil.now())
+                .eq(SeckillVoucher::getVoucherId, seckillVoucher.getVoucherId())
                 .update();
         String oldRedisStockStr = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, 
                 updateSeckillVoucherDto.getVoucherId()), String.class);
@@ -240,6 +241,7 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 newInitStock,
                 newRedisStock
                 );
+        //如果是增加库存,尝试将资格自动分配给订阅队列中最早的未购用户
         if (stockUpdateType == StockUpdateType.INCREASE) {
             SECKILL_ORDER_EXECUTOR.execute(() -> voucherOrderService
                     .autoIssueVoucherToEarliestSubscriber(seckillVoucher.getVoucherId(),null));
@@ -251,7 +253,8 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         Long voucherId = voucherSubscribeDto.getVoucherId();
         Long userId = UserHolder.getUser().getId();
         String userIdStr = String.valueOf(userId);
-
+        
+        //计算统一 TTL（过期秒数）
         Long ttlSeconds = redisCache.getExpire(
                 RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_VOUCHER_TAG_KEY, voucherId),
                 TimeUnit.SECONDS
@@ -269,11 +272,13 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
                 ttlSeconds = 3600L;
             }
         }
+        //检查是否已购买，判断用户是否在 SECKILL_USER_TAG_KEY:{voucherId} 集合中（已购集合）
         boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
                 RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
                 userIdStr
         ));
-
+        
+        
         RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
         if (purchased) {
             redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUCCESS.getCode(), ttlSeconds, TimeUnit.SECONDS);
@@ -281,17 +286,21 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
             return;
         }
         
+        // 加入订阅集合（SET），幂等
         RedisKeyBuild setKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_USER_TAG_KEY, voucherId);
         Long added = redisCache.addForSet(setKey, userIdStr);
         redisCache.expire(setKey, ttlSeconds, TimeUnit.SECONDS);
         
+        // 加入订阅队列（ZSET），仅首次加入时写入顺序分数
         RedisKeyBuild zsetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY, voucherId);
         if (Objects.nonNull(added) && added > 0) {
             redisCache.addForSortedSet(zsetKey, userIdStr, (double) System.currentTimeMillis(), ttlSeconds, TimeUnit.SECONDS);
         } else {
+            // 已存在则仅对齐TTL
             redisCache.expire(zsetKey, ttlSeconds, TimeUnit.SECONDS);
         }
         
+        // 更新订阅状态为 SUBSCRIBED（如已是 SUCCESS 则不降级）
         Integer prev = redisCache.getForHash(statusKey, userIdStr, Integer.class);
         if (!SubscribeStatus.SUCCESS.getCode().equals(prev)) {
             redisCache.putHash(statusKey, userIdStr, SubscribeStatus.SUBSCRIBED.getCode(), ttlSeconds, TimeUnit.SECONDS);
@@ -309,9 +318,11 @@ public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> impl
         RedisKeyBuild zsetKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_ZSET_TAG_KEY, voucherId);
         RedisKeyBuild statusKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_SUBSCRIBE_STATUS_TAG_KEY, voucherId);
         
+        // 从订阅集合与队列移除
         redisCache.removeForSet(setKey, userIdStr);
         redisCache.delForSortedSet(zsetKey, userIdStr);
         
+        // 已购则维持 SUCCESS，否则置为 UNSUBSCRIBED
         boolean purchased = Boolean.TRUE.equals(redisCache.isMemberForSet(
                 RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_USER_TAG_KEY, voucherId),
                 userIdStr
