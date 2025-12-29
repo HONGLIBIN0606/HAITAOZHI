@@ -52,6 +52,29 @@ public class VoucherReconcileLogServiceImpl extends ServiceImpl<VoucherReconcile
     
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public boolean saveReconcileLog(final Integer logType, final Integer businessType, final String detail, final Long traceId, final MessageExtend<SeckillVoucherMessage> message) {
+        SeckillVoucherMessage messageBody = message.getMessageBody();
+        VoucherReconcileLogDto voucherReconcileLogDto = new VoucherReconcileLogDto();
+        voucherReconcileLogDto.setOrderId(messageBody.getOrderId());
+        voucherReconcileLogDto.setUserId(messageBody.getUserId());
+        voucherReconcileLogDto.setVoucherId(messageBody.getVoucherId());
+        voucherReconcileLogDto.setMessageId(message.getUuid());
+        voucherReconcileLogDto.setDetail(detail);
+        voucherReconcileLogDto.setBeforeQty(messageBody.getBeforeQty());
+        voucherReconcileLogDto.setChangeQty(messageBody.getChangeQty());
+        voucherReconcileLogDto.setAfterQty(messageBody.getAfterQty());
+        voucherReconcileLogDto.setTraceId(traceId);
+        voucherReconcileLogDto.setLogType(logType);
+        voucherReconcileLogDto.setBusinessType(businessType);
+        if (voucherReconcileLogDto.getLogType().equals(LogType.RESTORE.getCode())) {
+            voucherReconcileLogDto.setBeforeQty(messageBody.getAfterQty());
+            voucherReconcileLogDto.setAfterQty(messageBody.getBeforeQty());
+        }
+        return saveReconcileLog(voucherReconcileLogDto);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean saveReconcileLog(VoucherReconcileLogDto voucherReconcileLogDto) {
         VoucherReconcileLog logEntity = new VoucherReconcileLog();
         logEntity.setId(snowflakeIdGenerator.nextId())

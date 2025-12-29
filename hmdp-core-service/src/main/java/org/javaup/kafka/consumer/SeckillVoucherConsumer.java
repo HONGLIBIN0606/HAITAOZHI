@@ -155,6 +155,7 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
                 voucherReconcileLogService.saveReconcileLog(LogType.RESTORE.getCode(), 
                         BusinessType.TIMEOUT.getCode(), 
                         "message delayed " + delayTime + "ms, rollback redis", 
+                        traceId,
                         message);
             } catch (Exception e) {
                 log.warn("保存对账日志失败(延迟丢弃)", e);
@@ -244,7 +245,8 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
             String detail = throwable == null ? "consume failed" : ("consume failed: " + throwable.getMessage());
             voucherReconcileLogService.saveReconcileLog(LogType.RESTORE.getCode(),
                     BusinessType.FAIL.getCode(), 
-                    detail, 
+                    detail,
+                    traceId,
                     message
             );
         } catch (Exception e) {
