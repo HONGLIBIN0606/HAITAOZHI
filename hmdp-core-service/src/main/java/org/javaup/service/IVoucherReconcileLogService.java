@@ -18,6 +18,12 @@ public interface IVoucherReconcileLogService extends IService<VoucherReconcileLo
                              String detail,
                              MessageExtend<SeckillVoucherMessage> message);
     
+    boolean saveReconcileLog(Integer logType,
+                             Integer businessType,
+                             String detail,
+                             Long traceId,
+                             MessageExtend<SeckillVoucherMessage> message);
+    
     
     boolean saveReconcileLog(VoucherReconcileLogDto voucherReconcileLogDto);
 }
