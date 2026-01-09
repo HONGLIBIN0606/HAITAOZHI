@@ -28,7 +28,7 @@ public class WebExceptionAdvice {
      * */
     @ExceptionHandler(value = HmdpFrameException.class)
     public Result<String> toolkitExceptionHandler(HttpServletRequest request, HmdpFrameException hmdpFrameException) {
-        log.error("业务异常 method : {} url : {} query : {} ", request.getMethod(), getRequestUrl(request), getRequestQuery(request), hmdpFrameException);
+        log.error("业务异常 错误信息 : {} method : {} url : {} query : {} ", hmdpFrameException.getMessage(), request.getMethod(), getRequestUrl(request), getRequestQuery(request), hmdpFrameException);
         return Result.fail( hmdpFrameException.getMessage());
     }
     /**
@@ -37,7 +37,7 @@ public class WebExceptionAdvice {
     @SneakyThrows
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public Result<List<ArgumentError>> validExceptionHandler(HttpServletRequest request, MethodArgumentNotValidException ex) {
-        log.error("参数验证异常 method : {} url : {} query : {} ", request.getMethod(), getRequestUrl(request), getRequestQuery(request), ex);
+        log.error("参数验证异常 错误信息 : {} method : {} url : {} query : {} ", ex.getMessage(), request.getMethod(), getRequestUrl(request), getRequestQuery(request), ex);
         BindingResult bindingResult = ex.getBindingResult();
         List<ArgumentError> argumentErrorList =
                 bindingResult.getFieldErrors()
@@ -56,7 +56,7 @@ public class WebExceptionAdvice {
      */
     @ExceptionHandler(value = Throwable.class)
     public Result<String> defaultErrorHandler(HttpServletRequest request, Throwable throwable) {
-        log.error("全局异常 method : {} url : {} query : {} ", request.getMethod(), getRequestUrl(request), getRequestQuery(request), throwable);
+        log.error("全局异常 错误信息 : {} method : {} url : {} query : {} ", throwable.getMessage(), request.getMethod(), getRequestUrl(request), getRequestQuery(request), throwable);
         return Result.fail();
     }
     
