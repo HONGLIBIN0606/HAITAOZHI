@@ -103,61 +103,47 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
     
     public Shop queryByIdV1(Long id){
-        // 解决缓存穿透
         return cacheClient
                 .queryWithPassThrough(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
     }
     
     public Shop queryByIdV2(Long id){
-        // 互斥锁解决缓存击穿
         return cacheClient
                 .queryWithMutex(CACHE_SHOP_KEY, id, Shop.class, this::getById, CACHE_SHOP_TTL, TimeUnit.MINUTES);
     }
     
     public Shop queryByIdV3(Long id){
-        // 逻辑过期解决缓存击穿
         return cacheClient
                 .queryWithLogicalExpire(CACHE_SHOP_KEY, id, Shop.class, this::getById, 20L, TimeUnit.SECONDS);
     }
     
     public Shop queryByIdV4(Long id){
-        // 双重检测解决缓存击穿
         Shop shop =
                 redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY, id), Shop.class);
-        // 如果缓存中存在就直接返回
         if (Objects.nonNull(shop)) {
             return shop;
         }
         log.info("查询商铺 从Redis缓存没有查询到 商铺id : {}",id);
-        // 通过布隆过滤器判断是否存在
         if (!bloomFilterHandlerFactory.get(BLOOM_FILTER_HANDLER_SHOP).contains(String.valueOf(id))) {
             log.info("查询商铺 布隆过滤器判断不存在 商铺id : {}",id);
             throw new RuntimeException("查询商铺不存在");
         }
-        // 解决缓存穿透，从缓存中判断是否存在商铺空值信息，如果有，代表商铺不存在，直接返回
         Boolean existResult = redisCache.hasKey(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY_NULL, id));
         if (existResult){
             throw new RuntimeException("查询商铺不存在");
         }
-        // 实现双重检测
-        // 加锁，解决缓存击穿
         RLock lock = serviceLockTool.getLock(LockType.Reentrant, LOCK_SHOP_KEY, new String[]{String.valueOf(id)});
         lock.lock();
         try {
-            // 再次从缓存中判断是否存在商铺空值信息，如果有，代表商铺不存在，直接返回
             existResult = redisCache.hasKey(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY_NULL, id));
             if (existResult){
                 throw new RuntimeException("查询商铺不存在");
             }
-            // 再次从缓存中获取商铺信息，通过此步骤可以避免大量请求在获取锁后，直接击穿缓存访问数据库
             shop = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY, id), Shop.class);
-            // 如果缓存中存在就直接返回
             if (Objects.nonNull(shop)) {
                 return shop;
             }
-            // 如果缓存还不存在，查询数据库
             shop = getById(id);
-            // 如果从数据库查询是空的，将空值写入redis
             if (Objects.isNull(shop)) {
                 redisCache.set(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY_NULL, id),
                         "这是一个空值",
@@ -165,7 +151,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
                         TimeUnit.MINUTES);
                 throw new RuntimeException("查询商铺不存在");
             }
-            // 如果数据库查询不是空的，将商铺信息写入缓存
             redisCache.set(RedisKeyBuild.createRedisKey(RedisKeyManage.CACHE_SHOP_KEY, id),shop,
                     CACHE_SHOP_TTL,
                     TimeUnit.MINUTES);
