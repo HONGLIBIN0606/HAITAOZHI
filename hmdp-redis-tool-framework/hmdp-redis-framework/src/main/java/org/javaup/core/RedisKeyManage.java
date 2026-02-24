@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 public enum RedisKeyManage {
     /**
-     * key信息
+     * key信息，关于key中为什么使用{}大括号，在星球中有详细的讲解：<a href="https://articles.zsxq.com/id_7k4qtb2mofst.html">...</a>
      * */
     USER_INFO_KEY("user:info:%s","用户id","value为UserInfo类型","k"),
    
