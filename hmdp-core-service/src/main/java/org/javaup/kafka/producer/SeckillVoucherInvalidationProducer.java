@@ -63,12 +63,10 @@ public class SeckillVoucherInvalidationProducer extends AbstractProducerHandler<
         final String errMsg = throwable == null ? "unknown" : throwable.getMessage();
         log.error("SeckillVoucherInvalidation send failed, topic={}, uuid={}, key={}, voucherId={}, reason={}, error= {}",
                 topic, message.getUuid(), message.getKey(), voucherId, reason, errMsg, throwable);
-        //如果死信队列也发送失败，直接统计到失败指标中
         if (topic.contains(DLQ)) {
             safeInc("seckill_invalidation_dlq", "reason", "send_failures");
             return;
         }else {
-            // 指标：失败计数
             safeInc("seckill_invalidation_send_failures", "topic", topic);
         }
         
