@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.javaup.AbstractProducerHandler;
 import org.javaup.kafka.message.SeckillVoucherInvalidationMessage;
 import org.javaup.message.MessageExtend;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.support.PropertiesLoaderSupport;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
@@ -28,6 +30,11 @@ import java.util.concurrent.TimeUnit;
 public class SeckillVoucherInvalidationProducer extends AbstractProducerHandler<MessageExtend<SeckillVoucherInvalidationMessage>> {
     
     private final static String RETRY_COUNT = "retryCount";
+    
+    private final static String DLQ = ".DLQ";
+    
+    @Autowired
+    private PropertiesLoaderSupport propertiesLoaderSupport;
     
     public SeckillVoucherInvalidationProducer(final KafkaTemplate<String, MessageExtend<SeckillVoucherInvalidationMessage>> kafkaTemplate) {
         super(kafkaTemplate);
@@ -56,8 +63,15 @@ public class SeckillVoucherInvalidationProducer extends AbstractProducerHandler<
         final String errMsg = throwable == null ? "unknown" : throwable.getMessage();
         log.error("SeckillVoucherInvalidation send failed, topic={}, uuid={}, key={}, voucherId={}, reason={}, error= {}",
                 topic, message.getUuid(), message.getKey(), voucherId, reason, errMsg, throwable);
+        //如果死信队列也发送失败，直接统计到失败指标中
+        if (topic.contains(DLQ)) {
+            safeInc("seckill_invalidation_dlq", "reason", "send_failures");
+            return;
+        }else {
+            // 指标：失败计数
+            safeInc("seckill_invalidation_send_failures", "topic", topic);
+        }
         
-        safeInc("seckill_invalidation_send_failures", "topic", topic);
         
         Map<String, String> headers = message.getHeaders();
         headers = headers == null ? new HashMap<>(8) : new HashMap<>(headers);
