@@ -21,6 +21,7 @@ import org.javaup.service.IVoucherOrderService;
 import org.javaup.service.IVoucherReconcileLogService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -122,8 +123,12 @@ public class SeckillVoucherConsumer extends AbstractConsumerHandler<SeckillVouch
     )
     public void onMessage(String value,
                           @Headers Map<String, Object> headers,
-                          @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String key) {
+                          @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String key,
+                          Acknowledgment acknowledgment) {
         consumeRaw(value, key, headers);
+        if (acknowledgment != null) {
+            acknowledgment.acknowledge();
+        }
     }
     
     @Override

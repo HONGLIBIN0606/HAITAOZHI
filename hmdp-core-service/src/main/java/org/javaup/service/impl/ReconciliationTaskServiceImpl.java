@@ -3,10 +3,12 @@ package org.javaup.service.impl;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.javaup.core.RedisKeyManage;
 import org.javaup.entity.SeckillVoucher;
 import org.javaup.entity.VoucherOrder;
 import org.javaup.entity.VoucherReconcileLog;
+import org.javaup.enums.LogType;
 import org.javaup.enums.ReconciliationStatus;
 import org.javaup.model.RedisTraceLogModel;
 import org.javaup.redis.RedisCache;
@@ -17,8 +19,8 @@ import org.javaup.service.IVoucherOrderService;
 import org.javaup.service.IVoucherReconcileLogService;
 import org.javaup.servicelock.LockType;
 import org.javaup.servicelock.annotion.ServiceLock;
-import org.springframework.stereotype.Service;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -26,9 +28,12 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.javaup.constant.DistributedLockConstants.UPDATE_SECKILL_VOUCHER_STOCK_LOCK;
+import static org.javaup.kafka.consumer.SeckillVoucherConsumer.MESSAGE_DELAY_TIME;
 
 /**
  * @program: 黑马点评-plus升级版实战项目。添加 阿星不是程序员 微信，添加时备注 点评 来获取项目的完整资料
@@ -36,6 +41,7 @@ import static org.javaup.constant.DistributedLockConstants.UPDATE_SECKILL_VOUCHE
  * @author: 阿星不是程序员
  **/
 @Service
+@Slf4j
 public class ReconciliationTaskServiceImpl implements IReconciliationTaskService {
     
     @Resource
@@ -59,7 +65,12 @@ public class ReconciliationTaskServiceImpl implements IReconciliationTaskService
     }
     
     public void reconciliationTaskExecute(Long voucherId){
+        Map<String, RedisTraceLogModel> redisTraceLogMap = loadRedisTraceLogMap(voucherId);
+        redisDeductTraceWithoutDbOrder(voucherId, redisTraceLogMap);
+        
         List<VoucherOrder> voucherOrderList = loadPendingOrders(voucherId);
+        RedisKeyBuild traceLogKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_TRACE_LOG_TAG_KEY, voucherId);
+        long ttlSeconds = resolveTraceTtlSeconds(traceLogKey, voucherId);
         for (VoucherOrder voucherOrder : voucherOrderList) {
             List<VoucherReconcileLog> logs = loadReconcileLogs(voucherOrder.getId());
             if (CollectionUtil.isEmpty(logs)) {
@@ -67,11 +78,8 @@ public class ReconciliationTaskServiceImpl implements IReconciliationTaskService
                         .markOrderStatus(voucherOrder.getId(), ReconciliationStatus.ABNORMAL);
                 continue;
             }
-            Map<String, RedisTraceLogModel> redisTraceLogMap = loadRedisTraceLogMap(voucherId);
-            RedisKeyBuild traceLogKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_TRACE_LOG_TAG_KEY, voucherId);
-            long ttlSeconds = resolveTraceTtlSeconds(traceLogKey, voucherId);
             boolean anyMissing = backfillMissingTraceLogs(logs, redisTraceLogMap, traceLogKey, ttlSeconds);
-
+            
             int dbLogCount = logs.size();
             boolean markConsistent = true;
             if (dbLogCount == 1 || dbLogCount == 2) {
@@ -135,6 +143,44 @@ public class ReconciliationTaskServiceImpl implements IReconciliationTaskService
             computedTtl = Math.max(1L, secondsUntilEnd + Duration.ofDays(1).getSeconds());
         }
         return computedTtl;
+    }
+    
+
+    private void redisDeductTraceWithoutDbOrder(Long voucherId, Map<String, RedisTraceLogModel> redisTraceLogMap) {
+        if (voucherId == null || CollectionUtil.isEmpty(redisTraceLogMap)) {
+            return;
+        }
+        RedisKeyBuild traceLogKey = RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_TRACE_LOG_TAG_KEY, voucherId);
+        boolean delRedisStockHasHappened = false;
+        long now = System.currentTimeMillis();
+        for (Entry<String, RedisTraceLogModel> redisTraceLogModelEntry : redisTraceLogMap.entrySet()) {
+            String traceId = redisTraceLogModelEntry.getKey();
+            RedisTraceLogModel redisTraceLogModel = redisTraceLogModelEntry.getValue();
+            if (redisTraceLogModel == null) {
+                continue;
+            }
+            if (!String.valueOf(LogType.DEDUCT.getCode()).equals(redisTraceLogModel.getLogType())) {
+                continue;
+            }
+            String orderId = redisTraceLogModel.getOrderId();
+            VoucherReconcileLog voucherReconcileLog = 
+                    voucherReconcileLogService.lambdaQuery()
+                            .eq(VoucherReconcileLog::getOrderId, Long.parseLong(orderId))
+                            .eq(VoucherReconcileLog::getTraceId, Long.parseLong(traceId))
+                            .one();
+            if (Objects.isNull(voucherReconcileLog)){
+                Long traceTs = redisTraceLogModel.getTs();
+                if (traceTs != null && now - traceTs < (MESSAGE_DELAY_TIME + 2000)) {
+                    continue;
+                }
+                log.error("发现Redis扣减流水存在，但DB订单不存在的情况，voucherId={}, orderId={}", voucherId, orderId);
+                if (!delRedisStockHasHappened) {
+                    ((IReconciliationTaskService) AopContext.currentProxy()).delRedisStock(voucherId);
+                    delRedisStockHasHappened = true;
+                }
+                redisCache.delForHash(traceLogKey, traceId);
+            }
+        }
     }
 
     private boolean backfillMissingTraceLogs(List<VoucherReconcileLog> logs,

@@ -10,6 +10,7 @@ import org.javaup.message.MessageExtend;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -47,8 +48,12 @@ public class SeckillVoucherInvalidationDlqConsumer extends AbstractConsumerHandl
     )
     public void onMessage(String value,
                           @Headers Map<String, Object> headers,
-                          @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String key) {
+                          @Header(name = KafkaHeaders.RECEIVED_KEY, required = false) String key,
+                          Acknowledgment acknowledgment) {
         consumeRaw(value, key, headers);
+        if (acknowledgment != null) {
+            acknowledgment.acknowledge();
+        }
     }
     
     @Override
