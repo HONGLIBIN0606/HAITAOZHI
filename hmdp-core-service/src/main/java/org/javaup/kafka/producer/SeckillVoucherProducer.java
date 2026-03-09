@@ -6,9 +6,7 @@ import org.javaup.AbstractProducerHandler;
 import org.javaup.enums.SeckillVoucherOrderOperate;
 import org.javaup.kafka.message.SeckillVoucherMessage;
 import org.javaup.kafka.redis.RedisVoucherData;
-import org.javaup.lua.SeckillVoucherRollBackOperate;
 import org.javaup.message.MessageExtend;
-import org.javaup.service.IVoucherReconcileLogService;
 import org.javaup.toolkit.SnowflakeIdGenerator;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -25,11 +23,6 @@ public class SeckillVoucherProducer extends AbstractProducerHandler<MessageExten
     @Resource
     private SnowflakeIdGenerator snowflakeIdGenerator;
     
-    @Resource
-    private SeckillVoucherRollBackOperate seckillVoucherRollBackOperate;
-    
-    @Resource
-    private IVoucherReconcileLogService voucherReconcileLogService;
     
     @Resource
     private RedisVoucherData redisVoucherData;
