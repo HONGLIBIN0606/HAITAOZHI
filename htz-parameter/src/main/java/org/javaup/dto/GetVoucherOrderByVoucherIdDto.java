@@ -1,0 +1,29 @@
+﻿package org.javaup.dto;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * @description: 通过优惠券id获取优惠券订单
+ * @author: hlb0606
+ **/
+@Data
+@EqualsAndHashCode(callSuper = false)
+public class GetVoucherOrderByVoucherIdDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+    
+    /**
+     * 优惠券id
+     */
+    @NotNull
+    private Long voucherId;
+
+}
+
+
